@@ -128,6 +128,25 @@
             font-size: 12px;
             margin-left: 6px;
         }
+        .prompt-box {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 8px;
+        }
+        .prompt-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .prompt-text {
+            font-size: 11px;
+            color: #888888;
+            line-height: 1.4;
+            word-break: break-word;
+            max-height: 100px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
         .note {
             margin-top: 15px;
             font-size: 11px;
@@ -173,6 +192,14 @@
             <div>Kontrast zu Schwarz: <span class="hex-value" id="contrastBlack">–</span></div>
             <div>Hellbezugswert (berechnet): <span class="hex-value" id="hbwOutput">–</span></div>
         </div>
+    </div>
+
+    <div class="result-box prompt-box">
+        <div class="prompt-header">
+            <span>KI-Visualisierungsprompt:</span>
+            <button class="copy-btn" id="copyPromptBtn" type="button">Prompt Kopieren</button>
+        </div>
+        <div class="prompt-text" id="promptOutput">–</div>
     </div>
 
     <div class="note" id="note" role="status"></div>
@@ -242,8 +269,6 @@
         "9022|Perlhellgrau|9C9C9C","9023|Perldunkelgrau|828282"
     ];
 
-    // sRGB (0-255) -> CIELAB. D65 für den RAL-Abgleich (Seheindruck), D50 zusätzlich zur Anzeige
-    // (Standard-Lichtart für ICC-Profile, Druck und Lack).
     const LAB_SETUP = {
         D65: {
             m: [[0.4124564, 0.3575761, 0.1804375], [0.2126729, 0.7151522, 0.0721750], [0.0193339, 0.1191920, 0.9503041]],
@@ -269,7 +294,6 @@
         return [116 * y - 16, 500 * (x - y), 200 * (y - z)];
     }
 
-    // Relative Helligkeit nach WCAG (0 = schwarz, 1 = weiß); entspricht dem Y-Wert in XYZ
     function relativeLuminance(rgb) {
         const [R, G, B] = rgb.map(c => {
             c /= 255;
@@ -288,7 +312,6 @@
     }
 
     function formatLab(lab) {
-        // + 0 verhindert die Anzeige von "-0.0"
         const v = lab.map(x => (Math.round(x * 10) / 10 + 0).toFixed(1));
         return 'L ' + v[0] + ' · a ' + v[1] + ' · b ' + v[2];
     }
@@ -320,10 +343,19 @@
         return best;
     }
 
-    // Identität = exakte Schreibweise.
-    // Groß-/Kleinschreibung, Umlaute, ß, Akzente und innere Leerzeichen zählen mit.
-    // Es wird nur getrimmt (Leerzeichen am Rand) und NFC-normalisiert
-    // (dieselbe Schreibweise ergibt auf jedem Gerät dieselbe Kodierung).
+    function generateSpatialPrompt(text, hex, ralCode, ralName, hbw) {
+        const isDark = hbw < 40;
+        const mood = isDark ? "moody, atmospheric, sophisticated, high-contrast" : "bright, airy, minimalistic, harmonious";
+        
+        return `A photo gallery layout featuring a cohesive branding and spatial design concept based on the brand identity '${text}'. ` +
+               `Primary identity color: Hex ${hex} (RAL ${ralCode} ${ralName}). ` +
+               `Atmosphere: ${mood}. ` +
+               `Image 1: Architectural interior photography of a modern executive reception office with a feature accent wall painted in Hex ${hex}, subtle warm spotlighting, high-end furniture. ` +
+               `Image 2: Modern corporate website UI on a laptop screen displaying elegant typography and accent elements in Hex ${hex}. ` +
+               `Image 3: Minimalist corporate apparel and business attire with subtle ${hex} color details. ` +
+               `Style: Architectural Digest editorial photography, 8k resolution, Hasselblad lighting, hyper-realistic materials, clean layout --ar 16:9`;
+    }
+
     async function textToHexColor(text) {
         if (!text || text.trim() === '') {
             return DEFAULT_HEX;
@@ -335,7 +367,6 @@
         const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
         const hashArray = Array.from(new Uint8Array(hashBuffer));
 
-        // Deterministische Extraktion der ersten 3 Bytes der SHA-256-Prüfsumme
         const [r, g, b] = hashArray;
 
         return "#" + [r, g, b]
@@ -358,21 +389,22 @@
     const contrastWhite = document.getElementById('contrastWhite');
     const contrastBlack = document.getElementById('contrastBlack');
     const hbwOutput = document.getElementById('hbwOutput');
+    const promptOutput = document.getElementById('promptOutput');
+    const copyPromptBtn = document.getElementById('copyPromptBtn');
 
-    // crypto.subtle gibt es nur in sicheren Kontexten (HTTPS oder localhost)
     const cryptoAvailable = !!(window.crypto && window.crypto.subtle);
     if (!cryptoAvailable) {
         note.textContent = 'Nicht verfügbar: Die Seite muss über HTTPS oder localhost geöffnet werden.';
         input.disabled = true;
     }
 
-    // Zähler, damit ein älteres Ergebnis kein neueres überschreibt
     let requestId = 0;
 
     input.addEventListener('input', async (e) => {
         const myId = ++requestId;
-        const hasText = e.target.value.trim() !== '';
-        const hexColor = await textToHexColor(e.target.value);
+        const inputText = e.target.value;
+        const hasText = inputText.trim() !== '';
+        const hexColor = await textToHexColor(inputText);
         if (myId !== requestId) return;
 
         preview.style.backgroundColor = hexColor;
@@ -388,9 +420,12 @@
             labD65.textContent = formatLab(rgbToLab(...rgb, 'D65'));
             rgbOutput.textContent = 'rgb(' + rgb.join(', ') + ')';
             const lum = relativeLuminance(rgb);
+            const hbwVal = Math.round(lum * 100);
             contrastWhite.textContent = contrastText(1.05 / (lum + 0.05));
             contrastBlack.textContent = contrastText((lum + 0.05) / 0.05);
-            hbwOutput.textContent = Math.round(lum * 100) + ' von 100';
+            hbwOutput.textContent = hbwVal + ' von 100';
+
+            promptOutput.textContent = generateSpatialPrompt(inputText.trim(), hexColor, ral.code, ral.name, hbwVal);
         } else {
             ralOutput.textContent = '–';
             ralSwatch.style.backgroundColor = '#333333';
@@ -401,6 +436,7 @@
             contrastWhite.textContent = '–';
             contrastBlack.textContent = '–';
             hbwOutput.textContent = '–';
+            promptOutput.textContent = '–';
         }
     });
 
@@ -417,6 +453,20 @@
         }
         copyBtn.textContent = label;
         setTimeout(() => { copyBtn.textContent = originalText; }, 1500);
+    });
+
+    copyPromptBtn.addEventListener('click', async () => {
+        const originalText = copyPromptBtn.textContent;
+        if (promptOutput.textContent === '–') return;
+        let label;
+        try {
+            await navigator.clipboard.writeText(promptOutput.textContent);
+            label = 'Kopiert!';
+        } catch (err) {
+            label = 'Fehlgeschlagen';
+        }
+        copyPromptBtn.textContent = label;
+        setTimeout(() => { copyPromptBtn.textContent = originalText; }, 1500);
     });
 </script>
 
