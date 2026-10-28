@@ -128,6 +128,55 @@
             background-color: #333333;
             transition: background-color 0.15s ease;
         }
+        /* Container für die dauerhaften Farbkarten aller Elemente */
+        #paletteCardsContainer {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .palette-card {
+            background-color: #1a1a1a;
+            border: 1px solid #333333;
+            border-radius: 4px;
+            padding: 10px 12px;
+            text-align: left;
+            font-family: monospace;
+            font-size: 12px;
+            color: #aaaaaa;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .card-swatch {
+            width: 28px;
+            height: 28px;
+            border-radius: 3px;
+            border: 1px solid #444444;
+            flex-shrink: 0;
+        }
+        .card-info {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+        .card-title {
+            color: #ffffff;
+            font-weight: bold;
+            font-size: 13px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+        .card-details {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            color: #888888;
+        }
+        .card-hex {
+            color: #ffffff;
+            font-weight: bold;
+        }
         .result-box {
             font-family: monospace;
             font-size: 13px;
@@ -243,6 +292,9 @@
     <div class="palette-preview" id="palettePreview">
         <div class="palette-swatch"></div>
     </div>
+
+    <!-- Dauerhafte Farbkarten-Liste für alle eingegebenen Elemente -->
+    <div id="paletteCardsContainer"></div>
 
     <div class="result-box">
         <span>Primär-Farbwert: <span class="hex-value" id="hexOutput" aria-live="polite">#333333</span> <span class="rgb-text" id="rgbOutput"></span></span>
@@ -432,7 +484,6 @@
         return "#" + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('').toUpperCase();
     }
 
-    // Verbesserter, strukturierter Prompt-Generator ohne Midjourney-Füllwörter & mit Farb-Hierarchien
     function generateSystemicPrompt(results) {
         const validResults = results.filter(r => r.text !== '');
         if (validResults.length === 0) return '–';
@@ -461,6 +512,7 @@
     const activeCount = document.getElementById('activeCount');
     const colorPreview = document.getElementById('colorPreview');
     const palettePreview = document.getElementById('palettePreview');
+    const paletteCardsContainer = document.getElementById('paletteCardsContainer');
     const hexOutput = document.getElementById('hexOutput');
     const rgbOutput = document.getElementById('rgbOutput');
     const ralOutput = document.getElementById('ralOutput');
@@ -506,7 +558,7 @@
 
         if (myId !== requestId) return;
 
-        // Palette-Streifen unten aktualisieren
+        // 1. Palette-Streifen unten aktualisieren
         palettePreview.innerHTML = '';
         results.forEach(res => {
             const swatch = document.createElement('div');
@@ -516,7 +568,30 @@
             palettePreview.appendChild(swatch);
         });
 
-        // Primärwert (erstes Eingabefeld) für das Haupt-Vorschauquadrat und die Details
+        // 2. Dauerhafte Farbkarten-Liste für alle eingegebenen Elemente aufbauen
+        paletteCardsContainer.innerHTML = '';
+        results.forEach((res, index) => {
+            if (res.text !== '') {
+                const rgb = hexToRgb(res.hex);
+                const labD50Val = formatLab(rgbToLab(...rgb, 'D50'));
+                const card = document.createElement('div');
+                card.className = 'palette-card';
+                card.innerHTML = `
+                    <div class="card-swatch" style="background-color: ${res.hex};"></div>
+                    <div class="card-info">
+                        <div class="card-title">${index === 0 ? 'Primär: ' : 'Element: '}${res.text}</div>
+                        <div class="card-details">
+                            <span>Hex: <span class="card-hex">${res.hex}</span></span>
+                            <span>RAL: ${res.ral.code} ${res.ral.name}</span>
+                            <span>Lab(D50): ${labD50Val}</span>
+                        </div>
+                    </div>
+                `;
+                paletteCardsContainer.appendChild(card);
+            }
+        });
+
+        // 3. Primärwert (erstes Eingabefeld) für das Haupt-Vorschauquadrat und die Details
         const primary = results[0];
         colorPreview.style.backgroundColor = primary.hex;
         hexOutput.textContent = primary.hex;
