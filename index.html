@@ -76,7 +76,7 @@
             justify-content: space-between;
             align-items: center;
         }
-        .result-box span {
+        .hex-value {
             color: #ffffff;
             font-weight: bold;
         }
@@ -94,6 +94,12 @@
             border-color: #666666;
             color: #ffffff;
         }
+        .note {
+            margin-top: 15px;
+            font-size: 11px;
+            color: #888888;
+            min-height: 14px;
+        }
     </style>
 </head>
 <body>
@@ -101,61 +107,80 @@
 <div class="container">
     <h1>mönch76</h1>
     <div class="subtitle">digitaler spiegel // stimmen.me</div>
-    
-    <input type="text" id="wordInput" placeholder="Begriff oder Satz eingeben..." autocomplete="off">
-    
+
+    <input type="text" id="wordInput" placeholder="Begriff oder Satz eingeben..." autocomplete="off" aria-label="Begriff oder Satz eingeben">
+
     <div class="color-preview" id="colorPreview"></div>
-    
+
     <div class="result-box">
-        <span>Matrikel-Farbwert: <span id="hexOutput">#333333</span></span>
-        <button class="copy-btn" id="copyBtn">Kopieren</button>
+        <span>Matrikel-Farbwert: <span class="hex-value" id="hexOutput" aria-live="polite">#333333</span></span>
+        <button class="copy-btn" id="copyBtn" type="button">Kopieren</button>
     </div>
+
+    <div class="note" id="note" role="status"></div>
 </div>
 
 <script>
+    const DEFAULT_HEX = '#333333';
+
+    // Identität = exakte Schreibweise.
+    // Groß-/Kleinschreibung, Umlaute, ß, Akzente und innere Leerzeichen zählen mit.
+    // Es wird nur getrimmt (Leerzeichen am Rand) und NFC-normalisiert
+    // (dieselbe Schreibweise ergibt auf jedem Gerät dieselbe Kodierung).
     async function textToHexColor(text) {
         if (!text || text.trim() === '') {
-            return '#333333';
+            return DEFAULT_HEX;
         }
-        
-        // Beseitigung der technischen Sackgassen (Kritikpunkt 3):
-        // 1. Vereinheitlichung der Groß-/Kleinschreibung
-        // 2. Unicode-Normalisierung für unbestechliche Umlaut-Verarbeitung
-        const cleanText = text.trim().toLowerCase().normalize('NFC');
-        
+
+        const cleanText = text.trim().normalize('NFC');
+
         const msgBuffer = new TextEncoder().encode(cleanText);
         const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
         const hashArray = Array.from(new Uint8Array(hashBuffer));
-        
-        // Deterministische Extraktion der ersten 3 Bytes aus der SHA-256 Prüfsumme
-        const r = hashArray[0];
-        const g = hashArray[1];
-        const b = hashArray[2];
-        
-        const hex = "#" + [r, g, b].map(x => {
-            const hexStr = x.toString(16);
-            return hexStr.length === 1 ? '0' + hexStr : hexStr;
-        }).join('').toUpperCase();
-        
-        return hex;
+
+        // Deterministische Extraktion der ersten 3 Bytes der SHA-256-Prüfsumme
+        const [r, g, b] = hashArray;
+
+        return "#" + [r, g, b]
+            .map(x => x.toString(16).padStart(2, '0'))
+            .join('')
+            .toUpperCase();
     }
 
     const input = document.getElementById('wordInput');
     const preview = document.getElementById('colorPreview');
     const output = document.getElementById('hexOutput');
     const copyBtn = document.getElementById('copyBtn');
+    const note = document.getElementById('note');
+
+    // crypto.subtle gibt es nur in sicheren Kontexten (HTTPS oder localhost)
+    const cryptoAvailable = !!(window.crypto && window.crypto.subtle);
+    if (!cryptoAvailable) {
+        note.textContent = 'Nicht verfügbar: Die Seite muss über HTTPS oder localhost geöffnet werden.';
+        input.disabled = true;
+    }
+
+    // Zähler, damit ein älteres Ergebnis kein neueres überschreibt
+    let requestId = 0;
 
     input.addEventListener('input', async (e) => {
+        const myId = ++requestId;
         const hexColor = await textToHexColor(e.target.value);
+        if (myId !== requestId) return;
         preview.style.backgroundColor = hexColor;
         output.textContent = hexColor;
     });
 
-    // Behebt die "Sackgasse" (Kritikpunkt 5)
-    copyBtn.addEventListener('click', () => {
-        navigator.clipboard.writeText(output.textContent);
+    copyBtn.addEventListener('click', async () => {
         const originalText = copyBtn.textContent;
-        copyBtn.textContent = 'Kopiert!';
+        let label;
+        try {
+            await navigator.clipboard.writeText(output.textContent);
+            label = 'Kopiert!';
+        } catch (err) {
+            label = 'Fehlgeschlagen';
+        }
+        copyBtn.textContent = label;
         setTimeout(() => { copyBtn.textContent = originalText; }, 1500);
     });
 </script>
