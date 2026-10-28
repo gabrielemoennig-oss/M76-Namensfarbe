@@ -22,7 +22,7 @@
             padding: 30px;
             border-radius: 8px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-            max-width: 450px;
+            max-width: 480px;
             width: 100%;
             text-align: center;
         }
@@ -40,36 +40,90 @@
             text-transform: uppercase;
             letter-spacing: 2px;
         }
+        .input-group {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+            align-items: center;
+        }
         input[type="text"] {
-            width: 100%;
-            padding: 12px;
+            flex-grow: 1;
+            padding: 10px 12px;
             background-color: #1a1a1a;
             border: 1px solid #333333;
             border-radius: 4px;
             color: #ffffff;
-            font-size: 16px;
+            font-size: 15px;
             box-sizing: border-box;
-            text-align: center;
-            margin-bottom: 20px;
+            text-align: left;
         }
         input[type="text"]:focus {
             outline: none;
             border-color: #555555;
         }
-        .color-preview {
-            width: 100%;
-            max-width: 260px;
-            aspect-ratio: 1 / 1;
+        .remove-btn {
+            background: none;
+            border: 1px solid #444444;
+            color: #888888;
+            width: 38px;
+            height: 38px;
             border-radius: 4px;
-            margin: 0 auto 25px;
-            transition: background-color 0.15s ease;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+        .remove-btn:hover {
+            border-color: #a00;
+            color: #ff5555;
+        }
+        .controls-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .add-btn {
+            background: none;
+            border: 1px solid #444444;
+            color: #aaaaaa;
+            padding: 6px 12px;
+            font-size: 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .add-btn:hover {
+            border-color: #666666;
+            color: #ffffff;
+            background-color: #1f1f1f;
+        }
+        .palette-preview {
+            display: flex;
+            gap: 6px;
+            width: 100%;
+            height: 40px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            background-color: #1a1a1a;
+            padding: 4px;
+            box-sizing: border-box;
+        }
+        .palette-swatch {
+            flex-grow: 1;
+            height: 100%;
+            border-radius: 2px;
             background-color: #333333;
+            transition: background-color 0.15s ease;
         }
         .result-box {
             font-family: monospace;
-            font-size: 14px;
+            font-size: 13px;
             background-color: #1a1a1a;
-            padding: 12px;
+            padding: 10px 12px;
             border-radius: 4px;
             border: 1px solid #333333;
             color: #aaaaaa;
@@ -78,32 +132,11 @@
             align-items: center;
             gap: 10px;
             text-align: left;
-        }
-        .result-box + .result-box {
-            margin-top: 10px;
+            margin-bottom: 10px;
         }
         .hex-value, .ral-value {
             color: #ffffff;
             font-weight: bold;
-        }
-        .ral-content {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        .ral-swatch {
-            width: 14px;
-            height: 14px;
-            border-radius: 2px;
-            border: 1px solid #444444;
-            background-color: #333333;
-            flex-shrink: 0;
-            transition: background-color 0.15s ease;
-        }
-        .ral-hex {
-            color: #888888;
-            font-size: 12px;
         }
         .copy-btn {
             background: none;
@@ -120,14 +153,6 @@
             border-color: #666666;
             color: #ffffff;
         }
-        .lab-content > div + div {
-            margin-top: 6px;
-        }
-        .rgb-text {
-            color: #888888;
-            font-size: 12px;
-            margin-left: 6px;
-        }
         .prompt-box {
             flex-direction: column;
             align-items: stretch;
@@ -143,9 +168,9 @@
             color: #888888;
             line-height: 1.4;
             word-break: break-word;
-            max-height: 100px;
+            max-height: 90px;
             overflow-y: auto;
-            padding-right: 4px;
+            text-align: left;
         }
         .note {
             margin-top: 15px;
@@ -161,42 +186,39 @@
     <h1>Namensfarbe</h1>
     <div class="subtitle">digitaler spiegel von MOENCH 76 // stimmen.me</div>
 
-    <input type="text" id="wordInput" placeholder="Begriff oder Satz eingeben..." autocomplete="off" aria-label="Begriff oder Satz eingeben">
+    <!-- Dynamischer Container für Eingabefelder -->
+    <div id="inputsContainer">
+        <div class="input-group">
+            <input type="text" class="name-input" placeholder="Begriff oder Name eingeben..." autocomplete="off">
+            <button class="remove-btn" type="button" style="visibility: hidden;">×</button>
+        </div>
+    </div>
 
-    <div class="color-preview" id="colorPreview"></div>
+    <div class="controls-row">
+        <button class="add-btn" id="addInputBtn" type="button">+ Element hinzufügen</button>
+        <span style="font-size: 11px; color: #888888;" id="activeCount">1 Element</span>
+    </div>
+
+    <!-- Farbpalette-Vorschau (Streifen für alle Farben) -->
+    <div class="palette-preview" id="palettePreview">
+        <div class="palette-swatch"></div>
+    </div>
 
     <div class="result-box">
-        <span>Matrikel-Farbwert: <span class="hex-value" id="hexOutput" aria-live="polite">#333333</span> <span class="rgb-text" id="rgbOutput"></span></span>
+        <span id="primaryResultText">Primär-Farbwert: <span class="hex-value" id="hexOutput">–</span></span>
         <button class="copy-btn" id="copyBtn" type="button">Kopieren</button>
     </div>
 
     <div class="result-box">
-        <div class="ral-content">
-            <span>RAL-Farbton:</span>
-            <span class="ral-swatch" id="ralSwatch"></span>
-            <span class="ral-value" id="ralOutput" aria-live="polite">–</span>
-            <span class="ral-hex" id="ralHex"></span>
-        </div>
-    </div>
-
-    <div class="result-box">
-        <div class="lab-content">
-            <div>Lab (D50): <span class="hex-value" id="labD50">–</span></div>
-            <div>Lab (D65): <span class="hex-value" id="labD65">–</span></div>
-        </div>
-    </div>
-
-    <div class="result-box">
-        <div class="lab-content">
-            <div>Kontrast zu Weiß: <span class="hex-value" id="contrastWhite">–</span></div>
-            <div>Kontrast zu Schwarz: <span class="hex-value" id="contrastBlack">–</span></div>
-            <div>Hellbezugswert (berechnet): <span class="hex-value" id="hbwOutput">–</span></div>
+        <div style="display: flex; align-items: center; gap: 8px; width: 100%; flex-wrap: wrap;">
+            <span>Nächster RAL-Ton:</span>
+            <span class="ral-value" id="ralOutput">–</span>
         </div>
     </div>
 
     <div class="result-box prompt-box">
         <div class="prompt-header">
-            <span>KI-Visualisierungsprompt:</span>
+            <span>KI-Visualisierungsprompt (Gesamtpalette):</span>
             <button class="copy-btn" id="copyPromptBtn" type="button">Prompt Kopieren</button>
         </div>
         <div class="prompt-text" id="promptOutput">–</div>
@@ -208,7 +230,6 @@
 <script>
     const DEFAULT_HEX = '#333333';
 
-    // RAL Classic: Code | Name | sRGB-Näherungswert (RAL selbst definiert keine Hex-Werte)
     const RAL_DATA = [
         "1000|Grünbeige|BEBD7F","1001|Beige|C2B078","1002|Sandgelb|C6A664","1003|Signalgelb|E5BE01",
         "1004|Goldgelb|CDA434","1005|Honiggelb|A98307","1006|Maisgelb|E4A010","1007|Narzissengelb|DC9D00",
@@ -273,15 +294,11 @@
         D65: {
             m: [[0.4124564, 0.3575761, 0.1804375], [0.2126729, 0.7151522, 0.0721750], [0.0193339, 0.1191920, 0.9503041]],
             w: [0.95047, 1.0, 1.08883]
-        },
-        D50: {
-            m: [[0.4360747, 0.3850649, 0.1430804], [0.2225045, 0.7168786, 0.0606169], [0.0139322, 0.0971045, 0.7141733]],
-            w: [0.96422, 1.0, 0.82521]
         }
     };
 
-    function rgbToLab(r, g, b, illuminant = 'D65') {
-        const { m, w } = LAB_SETUP[illuminant];
+    function rgbToLab(r, g, b) {
+        const { m, w } = LAB_SETUP.D65;
         const lin = c => {
             c /= 255;
             return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
@@ -292,28 +309,6 @@
         const y = f((m[1][0] * R + m[1][1] * G + m[1][2] * B) / w[1]);
         const z = f((m[2][0] * R + m[2][1] * G + m[2][2] * B) / w[2]);
         return [116 * y - 16, 500 * (x - y), 200 * (y - z)];
-    }
-
-    function relativeLuminance(rgb) {
-        const [R, G, B] = rgb.map(c => {
-            c /= 255;
-            return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
-        });
-        return 0.2126 * R + 0.7152 * G + 0.0722 * B;
-    }
-
-    function contrastText(ratio) {
-        let tag;
-        if (ratio >= 7) tag = 'AAA';
-        else if (ratio >= 4.5) tag = 'AA';
-        else if (ratio >= 3) tag = 'nur große Schrift';
-        else tag = 'zu niedrig';
-        return ratio.toFixed(1) + ' : 1 (' + tag + ')';
-    }
-
-    function formatLab(lab) {
-        const v = lab.map(x => (Math.round(x * 10) / 10 + 0).toFixed(1));
-        return 'L ' + v[0] + ' · a ' + v[1] + ' · b ' + v[2];
     }
 
     function hexToRgb(hex) {
@@ -343,129 +338,133 @@
         return best;
     }
 
-    function generateSpatialPrompt(text, hex, ralCode, ralName, hbw) {
-        const isDark = hbw < 40;
-        const mood = isDark ? "moody, atmospheric, sophisticated, high-contrast" : "bright, airy, minimalistic, harmonious";
-        
-        return `A photo gallery layout featuring a cohesive branding and spatial design concept based on the brand identity '${text}'. ` +
-               `Primary identity color: Hex ${hex} (RAL ${ralCode} ${ralName}). ` +
-               `Atmosphere: ${mood}. ` +
-               `Image 1: Architectural interior photography of a modern executive reception office with a feature accent wall painted in Hex ${hex}, subtle warm spotlighting, high-end furniture. ` +
-               `Image 2: Modern corporate website UI on a laptop screen displaying elegant typography and accent elements in Hex ${hex}. ` +
-               `Image 3: Minimalist corporate apparel and business attire with subtle ${hex} color details. ` +
-               `Style: Architectural Digest editorial photography, 8k resolution, Hasselblad lighting, hyper-realistic materials, clean layout --ar 16:9`;
-    }
-
     async function textToHexColor(text) {
-        if (!text || text.trim() === '') {
-            return DEFAULT_HEX;
-        }
-
+        if (!text || text.trim() === '') return DEFAULT_HEX;
         const cleanText = text.trim().normalize('NFC');
-
         const msgBuffer = new TextEncoder().encode(cleanText);
         const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
         const hashArray = Array.from(new Uint8Array(hashBuffer));
-
         const [r, g, b] = hashArray;
-
-        return "#" + [r, g, b]
-            .map(x => x.toString(16).padStart(2, '0'))
-            .join('')
-            .toUpperCase();
+        return "#" + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('').toUpperCase();
     }
 
-    const input = document.getElementById('wordInput');
-    const preview = document.getElementById('colorPreview');
-    const output = document.getElementById('hexOutput');
+    const inputsContainer = document.getElementById('inputsContainer');
+    const addInputBtn = document.getElementById('addInputBtn');
+    const activeCount = document.getElementById('activeCount');
+    const palettePreview = document.getElementById('palettePreview');
+    const hexOutput = document.getElementById('hexOutput');
     const ralOutput = document.getElementById('ralOutput');
-    const ralSwatch = document.getElementById('ralSwatch');
-    const ralHex = document.getElementById('ralHex');
-    const copyBtn = document.getElementById('copyBtn');
-    const note = document.getElementById('note');
-    const labD50 = document.getElementById('labD50');
-    const labD65 = document.getElementById('labD65');
-    const rgbOutput = document.getElementById('rgbOutput');
-    const contrastWhite = document.getElementById('contrastWhite');
-    const contrastBlack = document.getElementById('contrastBlack');
-    const hbwOutput = document.getElementById('hbwOutput');
     const promptOutput = document.getElementById('promptOutput');
+    const copyBtn = document.getElementById('copyBtn');
     const copyPromptBtn = document.getElementById('copyPromptBtn');
+    const note = document.getElementById('note');
 
     const cryptoAvailable = !!(window.crypto && window.crypto.subtle);
     if (!cryptoAvailable) {
         note.textContent = 'Nicht verfügbar: Die Seite muss über HTTPS oder localhost geöffnet werden.';
-        input.disabled = true;
     }
 
-    let requestId = 0;
+    function updateRemoveButtons() {
+        const groups = inputsContainer.querySelectorAll('.input-group');
+        groups.forEach(group => {
+            const btn = group.querySelector('.remove-btn');
+            btn.style.visibility = groups.length > 1 ? 'visible' : 'hidden';
+        });
+        activeCount.textContent = groups.length + (groups.length === 1 ? ' Element' : ' Elemente');
+    }
 
-    input.addEventListener('input', async (e) => {
-        const myId = ++requestId;
-        const inputText = e.target.value;
-        const hasText = inputText.trim() !== '';
-        const hexColor = await textToHexColor(inputText);
-        if (myId !== requestId) return;
+    async function processPalette() {
+        const inputs = inputsContainer.querySelectorAll('.name-input');
+        const results = [];
+        const names = [];
 
-        preview.style.backgroundColor = hexColor;
-        output.textContent = hexColor;
+        for (let input of inputs) {
+            const val = input.value;
+            const hex = await textToHexColor(val);
+            const ral = nearestRal(hex);
+            results.push({ text: val.trim(), hex, ral });
+            if (val.trim() !== '') names.push(val.trim());
+        }
 
-        if (hasText) {
-            const ral = nearestRal(hexColor);
-            ralOutput.textContent = 'RAL ' + ral.code + ' ' + ral.name;
-            ralSwatch.style.backgroundColor = ral.hex;
-            ralHex.textContent = ral.hex;
-            const rgb = hexToRgb(hexColor);
-            labD50.textContent = formatLab(rgbToLab(...rgb, 'D50'));
-            labD65.textContent = formatLab(rgbToLab(...rgb, 'D65'));
-            rgbOutput.textContent = 'rgb(' + rgb.join(', ') + ')';
-            const lum = relativeLuminance(rgb);
-            const hbwVal = Math.round(lum * 100);
-            contrastWhite.textContent = contrastText(1.05 / (lum + 0.05));
-            contrastBlack.textContent = contrastText((lum + 0.05) / 0.05);
-            hbwOutput.textContent = hbwVal + ' von 100';
+        // Palette-Vorschau aktualisieren
+        palettePreview.innerHTML = '';
+        results.forEach(res => {
+            const swatch = document.createElement('div');
+            swatch.className = 'palette-swatch';
+            swatch.style.backgroundColor = res.hex;
+            swatch.title = res.text ? `${res.text}: ${res.hex}` : res.hex;
+            palettePreview.appendChild(swatch);
+        });
 
-            promptOutput.textContent = generateSpatialPrompt(inputText.trim(), hexColor, ral.code, ral.name, hbwVal);
+        // Primärwert (erstes Feld) anzeigen
+        const primary = results[0];
+        hexOutput.textContent = primary.hex;
+        ralOutput.textContent = primary.text ? `RAL ${primary.ral.code} ${primary.ral.name} (${primary.ral.hex})` : '–';
+
+        // Kombinierten Prompt generieren
+        if (names.length > 0) {
+            const paletteDesc = results.filter(r => r.text !== '').map(r => `'${r.text}' (Hex ${r.hex}, RAL ${r.ral.code} ${r.ral.name})`).join(', ');
+            promptOutput.textContent = `A professional architectural and interior design concept reflecting the combined identity palette: [${paletteDesc}]. ` +
+                `Atmosphere: Harmonious, sophisticated, high-end commercial and residential styling. ` +
+                `Visuals: 1. Executive office reception featuring accent walls divided across the palette colors with warm architectural lighting. ` +
+                `2. Modern web platform UI utilizing the primary tones as branding anchors. ` +
+                `Style: Architectural Digest editorial photography, 8k resolution, Hasselblad lighting, hyper-realistic materials --ar 16:9`;
         } else {
-            ralOutput.textContent = '–';
-            ralSwatch.style.backgroundColor = '#333333';
-            ralHex.textContent = '';
-            labD50.textContent = '–';
-            labD65.textContent = '–';
-            rgbOutput.textContent = '';
-            contrastWhite.textContent = '–';
-            contrastBlack.textContent = '–';
-            hbwOutput.textContent = '–';
             promptOutput.textContent = '–';
         }
+    }
+
+    function addInputField(value = '') {
+        const group = document.createElement('div');
+        group.className = 'input-group';
+        group.innerHTML = `
+            <input type="text" class="name-input" placeholder="Weiterer Begriff oder Name..." value="${value}" autocomplete="off">
+            <button class="remove-btn" type="button">×</button>
+        `;
+        
+        const input = group.querySelector('input');
+        const removeBtn = group.querySelector('.remove-btn');
+
+        input.addEventListener('input', processPalette);
+        removeBtn.addEventListener('click', () => {
+            group.remove();
+            updateRemoveButtons();
+            processPalette();
+        });
+
+        inputsContainer.appendChild(group);
+        updateRemoveButtons();
+        input.focus();
+    }
+
+    // Initiales Eingabefeld verknüpfen
+    const initialInput = inputsContainer.querySelector('.name-input');
+    initialInput.addEventListener('input', processPalette);
+
+    addInputBtn.addEventListener('click', () => {
+        addInputField();
     });
 
     copyBtn.addEventListener('click', async () => {
         const originalText = copyBtn.textContent;
-        const hasValue = ralOutput.textContent !== '–';
-        const ralText = hasValue ? ' / ' + ralOutput.textContent + ' / Lab(D50) ' + labD50.textContent : '';
-        let label;
         try {
-            await navigator.clipboard.writeText(output.textContent + ralText);
-            label = 'Kopiert!';
+            await navigator.clipboard.writeText(hexOutput.textContent + ' / ' + ralOutput.textContent);
+            copyBtn.textContent = 'Kopiert!';
         } catch (err) {
-            label = 'Fehlgeschlagen';
+            copyBtn.textContent = 'Fehlgeschlagen';
         }
-        copyBtn.textContent = label;
         setTimeout(() => { copyBtn.textContent = originalText; }, 1500);
     });
 
     copyPromptBtn.addEventListener('click', async () => {
         const originalText = copyPromptBtn.textContent;
         if (promptOutput.textContent === '–') return;
-        let label;
         try {
             await navigator.clipboard.writeText(promptOutput.textContent);
-            label = 'Kopiert!';
+            copyPromptBtn.textContent = 'Kopiert!';
         } catch (err) {
-            label = 'Fehlgeschlagen';
+            copyPromptBtn.textContent = 'Fehlgeschlagen';
         }
-        copyPromptBtn.textContent = label;
         setTimeout(() => { copyPromptBtn.textContent = originalText; }, 1500);
     });
 </script>
