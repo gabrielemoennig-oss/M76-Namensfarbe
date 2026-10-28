@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>mönch76 frequenzübersetzer | stimmen.me</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .container {
+            background-color: #242424;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            max-width: 450px;
+            width: 100%;
+            text-align: center;
+        }
+        h1 {
+            font-size: 24px;
+            font-weight: 300;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+            color: #ffffff;
+        }
+        .subtitle {
+            font-size: 11px;
+            color: #888888;
+            margin-bottom: 25px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            background-color: #1a1a1a;
+            border: 1px solid #333333;
+            border-radius: 4px;
+            color: #ffffff;
+            font-size: 16px;
+            box-sizing: border-box;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #555555;
+        }
+        .color-preview {
+            width: 100%;
+            height: 8px;
+            border-radius: 2px;
+            margin-bottom: 25px;
+            transition: background-color 0.15s ease;
+            background-color: #333333;
+        }
+        .result-box {
+            font-family: monospace;
+            font-size: 14px;
+            background-color: #1a1a1a;
+            padding: 12px;
+            border-radius: 4px;
+            border: 1px solid #333333;
+            color: #aaaaaa;
+        }
+        .result-box span {
+            color: #ffffff;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>mönch76</h1>
+    <div class="subtitle">frequenzübersetzer // stimmen.me</div>
+    
+    <input type="text" id="wordInput" placeholder="Wert eintragen..." autocomplete="off">
+    
+    <div class="color-preview" id="colorPreview"></div>
+    
+    <div class="result-box">
+        Kognitiver Farbwert: <span id="hexOutput">#333333</span>
+    </div>
+</div>
+
+<script>
+    async function textToHexColor(text) {
+        if (!text || text.trim() === '') {
+            return '#333333';
+        }
+        const cleanText = text.trim();
+        const msgBuffer = new TextEncoder().encode(cleanText);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        
+        // Unbestechliche Extraktion der ersten 3 Bytes für die RGB-Frequenz
+        const r = hashArray[0];
+        const g = hashArray[1];
+        const b = hashArray[2];
+        
+        const hex = "#" + [r, g, b].map(x => {
+            const hexStr = x.toString(16);
+            return hexStr.length === 1 ? '0' + hexStr : hexStr;
+        }).join('').toUpperCase();
+        
+        return hex;
+    }
+
+    const input = document.getElementById('wordInput');
+    const preview = document.getElementById('colorPreview');
+    const output = document.getElementById('hexOutput');
+
+    input.addEventListener('input', async (e) => {
+        const hexColor = await textToHexColor(e.target.value);
+        preview.style.backgroundColor = hexColor;
+        output.textContent = hexColor;
+    });
+</script>
+
+</body>
+</html>
