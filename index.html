@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Namensfarbe | stimmen.me</title>
+    <title>Namensfarbe & Farbkonzept | stimmen.me</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -22,7 +22,7 @@
             padding: 30px;
             border-radius: 8px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-            max-width: 480px;
+            max-width: 500px;
             width: 100%;
             text-align: center;
         }
@@ -43,7 +43,7 @@
         .input-group {
             display: flex;
             gap: 8px;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
             align-items: center;
         }
         input[type="text"] {
@@ -101,11 +101,20 @@
             color: #ffffff;
             background-color: #1f1f1f;
         }
+        .color-preview {
+            width: 100%;
+            max-width: 260px;
+            aspect-ratio: 1 / 1;
+            border-radius: 4px;
+            margin: 0 auto 20px;
+            transition: background-color 0.15s ease;
+            background-color: #333333;
+        }
         .palette-preview {
             display: flex;
             gap: 6px;
             width: 100%;
-            height: 40px;
+            height: 32px;
             border-radius: 4px;
             margin-bottom: 20px;
             background-color: #1a1a1a;
@@ -138,6 +147,25 @@
             color: #ffffff;
             font-weight: bold;
         }
+        .ral-content {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            width: 100%;
+        }
+        .ral-swatch {
+            width: 14px;
+            height: 14px;
+            border-radius: 2px;
+            border: 1px solid #444444;
+            background-color: #333333;
+            flex-shrink: 0;
+        }
+        .ral-hex {
+            color: #888888;
+            font-size: 12px;
+        }
         .copy-btn {
             background: none;
             border: 1px solid #444444;
@@ -152,6 +180,14 @@
         .copy-btn:hover {
             border-color: #666666;
             color: #ffffff;
+        }
+        .lab-content > div + div {
+            margin-top: 6px;
+        }
+        .rgb-text {
+            color: #888888;
+            font-size: 12px;
+            margin-left: 6px;
         }
         .prompt-box {
             flex-direction: column;
@@ -168,9 +204,10 @@
             color: #888888;
             line-height: 1.4;
             word-break: break-word;
-            max-height: 90px;
+            max-height: 110px;
             overflow-y: auto;
             text-align: left;
+            padding-right: 4px;
         }
         .note {
             margin-top: 15px;
@@ -189,7 +226,7 @@
     <!-- Dynamischer Container für Eingabefelder -->
     <div id="inputsContainer">
         <div class="input-group">
-            <input type="text" class="name-input" placeholder="Begriff oder Name eingeben..." autocomplete="off">
+            <input type="text" class="name-input" placeholder="Begriff oder Name (z.B. Vorname)..." autocomplete="off">
             <button class="remove-btn" type="button" style="visibility: hidden;">×</button>
         </div>
     </div>
@@ -199,26 +236,46 @@
         <span style="font-size: 11px; color: #888888;" id="activeCount">1 Element</span>
     </div>
 
-    <!-- Farbpalette-Vorschau (Streifen für alle Farben) -->
+    <!-- Visuelles Haupt-Vorschauquadrat -->
+    <div class="color-preview" id="colorPreview" title="Primärfarbe Vorschau"></div>
+
+    <!-- Paletten-Streifen (Gesamtübersicht) -->
     <div class="palette-preview" id="palettePreview">
         <div class="palette-swatch"></div>
     </div>
 
     <div class="result-box">
-        <span id="primaryResultText">Primär-Farbwert: <span class="hex-value" id="hexOutput">–</span></span>
+        <span>Primär-Farbwert: <span class="hex-value" id="hexOutput" aria-live="polite">#333333</span> <span class="rgb-text" id="rgbOutput"></span></span>
         <button class="copy-btn" id="copyBtn" type="button">Kopieren</button>
     </div>
 
     <div class="result-box">
-        <div style="display: flex; align-items: center; gap: 8px; width: 100%; flex-wrap: wrap;">
-            <span>Nächster RAL-Ton:</span>
-            <span class="ral-value" id="ralOutput">–</span>
+        <div class="ral-content">
+            <span>RAL-Entsprechung:</span>
+            <span class="ral-swatch" id="ralSwatch"></span>
+            <span class="ral-value" id="ralOutput" aria-live="polite">–</span>
+            <span class="ral-hex" id="ralHex"></span>
+        </div>
+    </div>
+
+    <div class="result-box">
+        <div class="lab-content">
+            <div>Lab (D50): <span class="hex-value" id="labD50">–</span></div>
+            <div>Lab (D65): <span class="hex-value" id="labD65">–</span></div>
+        </div>
+    </div>
+
+    <div class="result-box">
+        <div class="lab-content">
+            <div>Kontrast zu Weiß: <span class="hex-value" id="contrastWhite">–</span></div>
+            <div>Kontrast zu Schwarz: <span class="hex-value" id="contrastBlack">–</span></div>
+            <div>Hellbezugswert (HBW): <span class="hex-value" id="hbwOutput">–</span></div>
         </div>
     </div>
 
     <div class="result-box prompt-box">
         <div class="prompt-header">
-            <span>KI-Visualisierungsprompt (Gesamtpalette):</span>
+            <span>KI-Konzept-Prompt (Web, Raum, Stil):</span>
             <button class="copy-btn" id="copyPromptBtn" type="button">Prompt Kopieren</button>
         </div>
         <div class="prompt-text" id="promptOutput">–</div>
@@ -230,6 +287,7 @@
 <script>
     const DEFAULT_HEX = '#333333';
 
+    // RAL Classic Datenbank
     const RAL_DATA = [
         "1000|Grünbeige|BEBD7F","1001|Beige|C2B078","1002|Sandgelb|C6A664","1003|Signalgelb|E5BE01",
         "1004|Goldgelb|CDA434","1005|Honiggelb|A98307","1006|Maisgelb|E4A010","1007|Narzissengelb|DC9D00",
@@ -294,11 +352,15 @@
         D65: {
             m: [[0.4124564, 0.3575761, 0.1804375], [0.2126729, 0.7151522, 0.0721750], [0.0193339, 0.1191920, 0.9503041]],
             w: [0.95047, 1.0, 1.08883]
+        },
+        D50: {
+            m: [[0.4360747, 0.3850649, 0.1430804], [0.2225045, 0.7168786, 0.0606169], [0.0139322, 0.0971045, 0.7141733]],
+            w: [0.96422, 1.0, 0.82521]
         }
     };
 
-    function rgbToLab(r, g, b) {
-        const { m, w } = LAB_SETUP.D65;
+    function rgbToLab(r, g, b, illuminant = 'D65') {
+        const { m, w } = LAB_SETUP[illuminant];
         const lin = c => {
             c /= 255;
             return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
@@ -309,6 +371,28 @@
         const y = f((m[1][0] * R + m[1][1] * G + m[1][2] * B) / w[1]);
         const z = f((m[2][0] * R + m[2][1] * G + m[2][2] * B) / w[2]);
         return [116 * y - 16, 500 * (x - y), 200 * (y - z)];
+    }
+
+    function relativeLuminance(rgb) {
+        const [R, G, B] = rgb.map(c => {
+            c /= 255;
+            return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+        });
+        return 0.2126 * R + 0.7152 * G + 0.0722 * B;
+    }
+
+    function contrastText(ratio) {
+        let tag;
+        if (ratio >= 7) tag = 'AAA';
+        else if (ratio >= 4.5) tag = 'AA';
+        else if (ratio >= 3) tag = 'nur große Schrift';
+        else tag = 'zu niedrig';
+        return ratio.toFixed(1) + ' : 1 (' + tag + ')';
+    }
+
+    function formatLab(lab) {
+        const v = lab.map(x => (Math.round(x * 10) / 10 + 0).toFixed(1));
+        return 'L ' + v[0] + ' · a ' + v[1] + ' · b ' + v[2];
     }
 
     function hexToRgb(hex) {
@@ -348,12 +432,45 @@
         return "#" + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('').toUpperCase();
     }
 
+    // Verbesserter, strukturierter Prompt-Generator ohne Midjourney-Füllwörter & mit Farb-Hierarchien
+    function generateSystemicPrompt(results) {
+        const validResults = results.filter(r => r.text !== '');
+        if (validResults.length === 0) return '–';
+
+        const primary = validResults[0];
+        const others = validResults.slice(1);
+
+        let desc = `A professional corporate and editorial design concept based on a custom mathematical identity palette. ` +
+                   `The primary dominant base tone is inspired by '${primary.text}' (Hex ${primary.hex}, similar to ${primary.ral.name}), dominating large background surfaces and textiles. `;
+        
+        if (others.length > 0) {
+            const secondaryList = others.map((o, idx) => `Accent ${idx + 1} for '${o.text}' (Hex ${o.hex}, similar to ${o.ral.name})`).join(', ');
+            desc += `Secondary structural elements and highlights use: ${secondaryList}. `;
+        }
+
+        desc += `The visual output must show a clean grid containing 3 distinct scenes: ` +
+                `1. A minimalist web interface layout on a laptop screen with calm typography and structured color accents. ` +
+                `2. An architectural interior design view of an executive workspace featuring calm neutral walls, structured textiles, and targeted color accents. ` +
+                `3. A person wearing a timeless, elegant professional outfit aligned with the palette. ` +
+                `Style: Editorial architecture photography, natural daylight, matte textures, high-end corporate identity presentation, clean composition.`;
+        return desc;
+    }
+
     const inputsContainer = document.getElementById('inputsContainer');
     const addInputBtn = document.getElementById('addInputBtn');
     const activeCount = document.getElementById('activeCount');
+    const colorPreview = document.getElementById('colorPreview');
     const palettePreview = document.getElementById('palettePreview');
     const hexOutput = document.getElementById('hexOutput');
+    const rgbOutput = document.getElementById('rgbOutput');
     const ralOutput = document.getElementById('ralOutput');
+    const ralSwatch = document.getElementById('ralSwatch');
+    const ralHex = document.getElementById('ralHex');
+    const labD50 = document.getElementById('labD50');
+    const labD65 = document.getElementById('labD65');
+    const contrastWhite = document.getElementById('contrastWhite');
+    const contrastBlack = document.getElementById('contrastBlack');
+    const hbwOutput = document.getElementById('hbwOutput');
     const promptOutput = document.getElementById('promptOutput');
     const copyBtn = document.getElementById('copyBtn');
     const copyPromptBtn = document.getElementById('copyPromptBtn');
@@ -373,20 +490,23 @@
         activeCount.textContent = groups.length + (groups.length === 1 ? ' Element' : ' Elemente');
     }
 
+    let requestId = 0;
+
     async function processPalette() {
+        const myId = ++requestId;
         const inputs = inputsContainer.querySelectorAll('.name-input');
         const results = [];
-        const names = [];
 
         for (let input of inputs) {
             const val = input.value;
             const hex = await textToHexColor(val);
             const ral = nearestRal(hex);
             results.push({ text: val.trim(), hex, ral });
-            if (val.trim() !== '') names.push(val.trim());
         }
 
-        // Palette-Vorschau aktualisieren
+        if (myId !== requestId) return;
+
+        // Palette-Streifen unten aktualisieren
         palettePreview.innerHTML = '';
         results.forEach(res => {
             const swatch = document.createElement('div');
@@ -396,20 +516,37 @@
             palettePreview.appendChild(swatch);
         });
 
-        // Primärwert (erstes Feld) anzeigen
+        // Primärwert (erstes Eingabefeld) für das Haupt-Vorschauquadrat und die Details
         const primary = results[0];
+        colorPreview.style.backgroundColor = primary.hex;
         hexOutput.textContent = primary.hex;
-        ralOutput.textContent = primary.text ? `RAL ${primary.ral.code} ${primary.ral.name} (${primary.ral.hex})` : '–';
 
-        // Kombinierten Prompt generieren
-        if (names.length > 0) {
-            const paletteDesc = results.filter(r => r.text !== '').map(r => `'${r.text}' (Hex ${r.hex}, RAL ${r.ral.code} ${r.ral.name})`).join(', ');
-            promptOutput.textContent = `A professional architectural and interior design concept reflecting the combined identity palette: [${paletteDesc}]. ` +
-                `Atmosphere: Harmonious, sophisticated, high-end commercial and residential styling. ` +
-                `Visuals: 1. Executive office reception featuring accent walls divided across the palette colors with warm architectural lighting. ` +
-                `2. Modern web platform UI utilizing the primary tones as branding anchors. ` +
-                `Style: Architectural Digest editorial photography, 8k resolution, Hasselblad lighting, hyper-realistic materials --ar 16:9`;
+        if (primary.text !== '') {
+            const rgb = hexToRgb(primary.hex);
+            rgbOutput.textContent = 'rgb(' + rgb.join(', ') + ')';
+            ralOutput.textContent = 'RAL ' + primary.ral.code + ' ' + primary.ral.name;
+            ralSwatch.style.backgroundColor = primary.ral.hex;
+            ralHex.textContent = primary.ral.hex;
+            labD50.textContent = formatLab(rgbToLab(...rgb, 'D50'));
+            labD65.textContent = formatLab(rgbToLab(...rgb, 'D65'));
+            
+            const lum = relativeLuminance(rgb);
+            const hbwVal = Math.round(lum * 100);
+            contrastWhite.textContent = contrastText(1.05 / (lum + 0.05));
+            contrastBlack.textContent = contrastText((lum + 0.05) / 0.05);
+            hbwOutput.textContent = hbwVal + ' von 100';
+
+            promptOutput.textContent = generateSystemicPrompt(results);
         } else {
+            rgbOutput.textContent = '';
+            ralOutput.textContent = '–';
+            ralSwatch.style.backgroundColor = '#333333';
+            ralHex.textContent = '';
+            labD50.textContent = '–';
+            labD65.textContent = '–';
+            contrastWhite.textContent = '–';
+            contrastBlack.textContent = '–';
+            hbwOutput.textContent = '–';
             promptOutput.textContent = '–';
         }
     }
@@ -418,7 +555,7 @@
         const group = document.createElement('div');
         group.className = 'input-group';
         group.innerHTML = `
-            <input type="text" class="name-input" placeholder="Weiterer Begriff oder Name..." value="${value}" autocomplete="off">
+            <input type="text" class="name-input" placeholder="Weiterer Begriff (z.B. Nachname)..." value="${value}" autocomplete="off">
             <button class="remove-btn" type="button">×</button>
         `;
         
@@ -437,7 +574,6 @@
         input.focus();
     }
 
-    // Initiales Eingabefeld verknüpfen
     const initialInput = inputsContainer.querySelector('.name-input');
     initialInput.addEventListener('input', processPalette);
 
@@ -447,8 +583,9 @@
 
     copyBtn.addEventListener('click', async () => {
         const originalText = copyBtn.textContent;
+        const ralText = ralOutput.textContent !== '–' ? ' / ' + ralOutput.textContent + ' / Lab(D50) ' + labD50.textContent : '';
         try {
-            await navigator.clipboard.writeText(hexOutput.textContent + ' / ' + ralOutput.textContent);
+            await navigator.clipboard.writeText(hexOutput.textContent + ralText);
             copyBtn.textContent = 'Kopiert!';
         } catch (err) {
             copyBtn.textContent = 'Fehlgeschlagen';
