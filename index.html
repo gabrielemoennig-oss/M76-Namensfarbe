@@ -75,10 +75,34 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 10px;
+            text-align: left;
         }
-        .hex-value {
+        .result-box + .result-box {
+            margin-top: 10px;
+        }
+        .hex-value, .ral-value {
             color: #ffffff;
             font-weight: bold;
+        }
+        .ral-content {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .ral-swatch {
+            width: 14px;
+            height: 14px;
+            border-radius: 2px;
+            border: 1px solid #444444;
+            background-color: #333333;
+            flex-shrink: 0;
+            transition: background-color 0.15s ease;
+        }
+        .ral-hex {
+            color: #888888;
+            font-size: 12px;
         }
         .copy-btn {
             background: none;
@@ -89,6 +113,7 @@
             border-radius: 3px;
             cursor: pointer;
             transition: all 0.2s;
+            flex-shrink: 0;
         }
         .copy-btn:hover {
             border-color: #666666;
@@ -117,11 +142,123 @@
         <button class="copy-btn" id="copyBtn" type="button">Kopieren</button>
     </div>
 
+    <div class="result-box">
+        <div class="ral-content">
+            <span>RAL-Farbton:</span>
+            <span class="ral-swatch" id="ralSwatch"></span>
+            <span class="ral-value" id="ralOutput" aria-live="polite">–</span>
+            <span class="ral-hex" id="ralHex"></span>
+        </div>
+    </div>
+
     <div class="note" id="note" role="status"></div>
 </div>
 
 <script>
     const DEFAULT_HEX = '#333333';
+
+    // RAL Classic: Code | Name | sRGB-Näherungswert (RAL selbst definiert keine Hex-Werte)
+    const RAL_DATA = [
+        "1000|Grünbeige|BEBD7F","1001|Beige|C2B078","1002|Sandgelb|C6A664","1003|Signalgelb|E5BE01",
+        "1004|Goldgelb|CDA434","1005|Honiggelb|A98307","1006|Maisgelb|E4A010","1007|Narzissengelb|DC9D00",
+        "1011|Braunbeige|8A6642","1012|Zitronengelb|C7B446","1013|Perlweiß|EAE6CA","1014|Elfenbein|E1CC4F",
+        "1015|Hellelfenbein|E6D690","1016|Schwefelgelb|EDFF21","1017|Safrangelb|F5D033","1018|Zinkgelb|F8F32B",
+        "1019|Graubeige|9E9764","1020|Olivgelb|999950","1021|Rapsgelb|F3DA0B","1023|Verkehrsgelb|FAD201",
+        "1024|Ockergelb|AEA04B","1026|Leuchtgelb|FFFF00","1027|Currygelb|9D9101","1028|Melonengelb|F4A900",
+        "1032|Ginstergelb|D6AE01","1033|Dahliengelb|F3A505","1034|Pastellgelb|EFA94A","1035|Perlbeige|6A5D4D",
+        "1036|Perlgold|705335","1037|Sonnengelb|F39F18",
+        "2000|Gelborange|ED760E","2001|Rotorange|C93C20","2002|Blutorange|CB2821","2003|Pastellorange|FF7514",
+        "2004|Reinorange|F44611","2005|Leuchtorange|FF2301","2007|Leuchthellorange|FFA420","2008|Hellrotorange|F75E25",
+        "2009|Verkehrsorange|F54021","2010|Signalorange|D84B20","2011|Tieforange|EC7C26","2012|Lachsorange|E55137",
+        "2013|Perlorange|C35831",
+        "3000|Feuerrot|AF2B1E","3001|Signalrot|A52019","3002|Karminrot|A2231D","3003|Rubinrot|9B111E",
+        "3004|Purpurrot|75151E","3005|Weinrot|5E2129","3007|Schwarzrot|412227","3009|Oxidrot|642424",
+        "3011|Braunrot|781F19","3012|Beigerot|C1876B","3013|Tomatenrot|A12312","3014|Altrosa|D36E70",
+        "3015|Hellrosa|EA899A","3016|Korallenrot|B32821","3017|Rosé|E63244","3018|Erdbeerrot|D53032",
+        "3020|Verkehrsrot|CC0605","3022|Lachsrot|D95030","3024|Leuchtrot|F80000","3026|Leuchthellrot|FE0000",
+        "3027|Himbeerrot|C51D34","3028|Reinrot|CB3234","3031|Orientrot|B32428","3032|Perlrubinrot|721422",
+        "3033|Perlrosa|B44C43",
+        "4001|Rotlila|6D3F5B","4002|Rotviolett|922B3E","4003|Erikaviolett|DE4C8A","4004|Bordeauxviolett|641C34",
+        "4005|Blaulila|6C4675","4006|Verkehrspurpur|A03472","4007|Purpurviolett|4A192C","4008|Signalviolett|924E7D",
+        "4009|Pastellviolett|A18594","4010|Telemagenta|CF3476","4011|Perlviolett|8673A1","4012|Perlbrombeer|6C6874",
+        "5000|Violettblau|354D73","5001|Grünblau|1F3438","5002|Ultramarinblau|20214F","5003|Saphirblau|1D1E33",
+        "5004|Schwarzblau|18171C","5005|Signalblau|1E2460","5007|Brillantblau|3E5F8A","5008|Graublau|26252D",
+        "5009|Azurblau|025669","5010|Enzianblau|0E294B","5011|Stahlblau|231A24","5012|Lichtblau|3B83BD",
+        "5013|Kobaltblau|1E213D","5014|Taubenblau|606E8C","5015|Himmelblau|2271B3","5017|Verkehrsblau|063971",
+        "5018|Türkisblau|3F888F","5019|Kapriblau|1B5583","5020|Ozeanblau|1D334A","5021|Wasserblau|256D7B",
+        "5022|Nachtblau|252850","5023|Fernblau|49678D","5024|Pastellblau|5D9B9B","5025|Perlenzianblau|2A6478",
+        "5026|Perlnachtblau|102C54",
+        "6000|Patinagrün|316650","6001|Smaragdgrün|287233","6002|Laubgrün|2D572C","6003|Olivgrün|424632",
+        "6004|Blaugrün|1F3A3D","6005|Moosgrün|2F4538","6006|Grauoliv|3E3B32","6007|Flaschengrün|343B29",
+        "6008|Braungrün|39352A","6009|Tannengrün|31372B","6010|Grasgrün|35682D","6011|Resedagrün|587246",
+        "6012|Schwarzgrün|343E40","6013|Schilfgrün|6C7156","6014|Gelboliv|47402E","6015|Schwarzoliv|3B3C36",
+        "6016|Türkisgrün|1E5945","6017|Maigrün|4C9141","6018|Gelbgrün|57A639","6019|Weißgrün|BDECB6",
+        "6020|Chromoxidgrün|2E3A23","6021|Blassgrün|89AC76","6022|Braunoliv|25221B","6024|Verkehrsgrün|308446",
+        "6025|Farngrün|3D642D","6026|Opalgrün|015D52","6027|Lichtgrün|84C3BE","6028|Kieferngrün|2C5545",
+        "6029|Minzgrün|20603D","6032|Signalgrün|317F43","6033|Minttürkis|497E76","6034|Pastelltürkis|7FB5B5",
+        "6035|Perlgrün|1C542D","6036|Perlopalgrün|193737","6037|Reingrün|008F39","6038|Leuchtgrün|00BB2D",
+        "7000|Fehgrau|78858B","7001|Silbergrau|8A9597","7002|Olivgrau|7E7B52","7003|Moosgrau|6C7059",
+        "7004|Signalgrau|969992","7005|Mausgrau|646B63","7006|Beigegrau|6D6552","7008|Khakigrau|6A5F31",
+        "7009|Grüngrau|4D5645","7010|Zeltgrau|4C514A","7011|Eisengrau|434B4D","7012|Basaltgrau|4E5754",
+        "7013|Braungrau|464531","7015|Schiefergrau|434750","7016|Anthrazitgrau|293133","7021|Schwarzgrau|23282B",
+        "7022|Umbragrau|332F2C","7023|Betongrau|686C5E","7024|Graphitgrau|474A51","7026|Granitgrau|2F353B",
+        "7030|Steingrau|8B8C7A","7031|Blaugrau|474B4E","7032|Kieselgrau|B8B799","7033|Zementgrau|7D8471",
+        "7034|Gelbgrau|8F8B66","7035|Lichtgrau|D7D7D7","7036|Platingrau|7F7679","7037|Staubgrau|7D7F7D",
+        "7038|Achatgrau|B5B8B1","7039|Quarzgrau|6C6960","7040|Fenstergrau|9DA1AA","7042|Verkehrsgrau A|8D948D",
+        "7043|Verkehrsgrau B|4E5452","7044|Seidengrau|CAC4B0","7045|Telegrau 1|909090","7046|Telegrau 2|82898F",
+        "7047|Telegrau 4|D0D0D0","7048|Perlmausgrau|898176",
+        "8000|Grünbraun|826C34","8001|Ockerbraun|955F20","8002|Signalbraun|6C3B2A","8003|Lehmbraun|734222",
+        "8004|Kupferbraun|8E402A","8007|Rehbraun|59351F","8008|Olivbraun|6F4F28","8011|Nussbraun|5B3A29",
+        "8012|Rotbraun|592321","8014|Sepiabraun|382C1E","8015|Kastanienbraun|633A34","8016|Mahagonibraun|4C2F27",
+        "8017|Schokoladenbraun|45322E","8019|Graubraun|403A3A","8022|Schwarzbraun|212121","8023|Orangebraun|A65E2F",
+        "8024|Beigebraun|79553C","8025|Blassbraun|755C48","8028|Terrabraun|4E3B31","8029|Perlkupfer|763C28",
+        "9001|Cremeweiß|FDF4E3","9002|Grauweiß|E7EBDA","9003|Signalweiß|F4F4F4","9004|Signalschwarz|282828",
+        "9005|Tiefschwarz|0A0A0A","9006|Weißaluminium|A5A5A5","9007|Graualuminium|8F8F8F","9010|Reinweiß|FFFFFF",
+        "9011|Graphitschwarz|1C1C1C","9016|Verkehrsweiß|F1F0EA","9017|Verkehrsschwarz|1E1E1E","9018|Papyrusweiß|CFD3CD",
+        "9022|Perlhellgrau|9C9C9C","9023|Perldunkelgrau|828282"
+    ];
+
+    // sRGB (0-255) -> CIELAB (D65), damit der "nächste" Farbton dem Seheindruck entspricht
+    function rgbToLab(r, g, b) {
+        const lin = c => {
+            c /= 255;
+            return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+        };
+        const R = lin(r), G = lin(g), B = lin(b);
+        let x = (R * 0.4124564 + G * 0.3575761 + B * 0.1804375) / 0.95047;
+        let y = (R * 0.2126729 + G * 0.7151522 + B * 0.0721750);
+        let z = (R * 0.0193339 + G * 0.1191920 + B * 0.9503041) / 1.08883;
+        const f = t => t > 0.008856 ? Math.cbrt(t) : (7.787 * t) + 16 / 116;
+        x = f(x); y = f(y); z = f(z);
+        return [116 * y - 16, 500 * (x - y), 200 * (y - z)];
+    }
+
+    function hexToRgb(hex) {
+        const h = hex.replace('#', '');
+        return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
+    }
+
+    const RAL = RAL_DATA.map(entry => {
+        const [code, name, hex] = entry.split('|');
+        return { code, name, hex: '#' + hex, lab: rgbToLab(...hexToRgb(hex)) };
+    });
+
+    function nearestRal(hex) {
+        const lab = rgbToLab(...hexToRgb(hex));
+        let best = null;
+        let bestDist = Infinity;
+        for (const ral of RAL) {
+            const dL = lab[0] - ral.lab[0];
+            const dA = lab[1] - ral.lab[1];
+            const dB = lab[2] - ral.lab[2];
+            const dist = dL * dL + dA * dA + dB * dB;
+            if (dist < bestDist) {
+                bestDist = dist;
+                best = ral;
+            }
+        }
+        return best;
+    }
 
     // Identität = exakte Schreibweise.
     // Groß-/Kleinschreibung, Umlaute, ß, Akzente und innere Leerzeichen zählen mit.
@@ -150,6 +287,9 @@
     const input = document.getElementById('wordInput');
     const preview = document.getElementById('colorPreview');
     const output = document.getElementById('hexOutput');
+    const ralOutput = document.getElementById('ralOutput');
+    const ralSwatch = document.getElementById('ralSwatch');
+    const ralHex = document.getElementById('ralHex');
     const copyBtn = document.getElementById('copyBtn');
     const note = document.getElementById('note');
 
@@ -165,17 +305,31 @@
 
     input.addEventListener('input', async (e) => {
         const myId = ++requestId;
+        const hasText = e.target.value.trim() !== '';
         const hexColor = await textToHexColor(e.target.value);
         if (myId !== requestId) return;
+
         preview.style.backgroundColor = hexColor;
         output.textContent = hexColor;
+
+        if (hasText) {
+            const ral = nearestRal(hexColor);
+            ralOutput.textContent = 'RAL ' + ral.code + ' ' + ral.name;
+            ralSwatch.style.backgroundColor = ral.hex;
+            ralHex.textContent = ral.hex;
+        } else {
+            ralOutput.textContent = '–';
+            ralSwatch.style.backgroundColor = '#333333';
+            ralHex.textContent = '';
+        }
     });
 
     copyBtn.addEventListener('click', async () => {
         const originalText = copyBtn.textContent;
+        const ralText = ralOutput.textContent !== '–' ? ' / ' + ralOutput.textContent : '';
         let label;
         try {
-            await navigator.clipboard.writeText(output.textContent);
+            await navigator.clipboard.writeText(output.textContent + ralText);
             label = 'Kopiert!';
         } catch (err) {
             label = 'Fehlgeschlagen';
