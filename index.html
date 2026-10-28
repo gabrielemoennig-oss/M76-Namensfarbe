@@ -119,6 +119,9 @@
             border-color: #666666;
             color: #ffffff;
         }
+        .lab-content > div + div {
+            margin-top: 6px;
+        }
         .note {
             margin-top: 15px;
             font-size: 11px;
@@ -148,6 +151,13 @@
             <span class="ral-swatch" id="ralSwatch"></span>
             <span class="ral-value" id="ralOutput" aria-live="polite">–</span>
             <span class="ral-hex" id="ralHex"></span>
+        </div>
+    </div>
+
+    <div class="result-box">
+        <div class="lab-content">
+            <div>Lab (D50): <span class="hex-value" id="labD50">–</span></div>
+            <div>Lab (D65): <span class="hex-value" id="labD65">–</span></div>
         </div>
     </div>
 
@@ -218,19 +228,37 @@
         "9022|Perlhellgrau|9C9C9C","9023|Perldunkelgrau|828282"
     ];
 
-    // sRGB (0-255) -> CIELAB (D65), damit der "nächste" Farbton dem Seheindruck entspricht
-    function rgbToLab(r, g, b) {
+    // sRGB (0-255) -> CIELAB. D65 für den RAL-Abgleich (Seheindruck), D50 zusätzlich zur Anzeige
+    // (Standard-Lichtart für ICC-Profile, Druck und Lack).
+    const LAB_SETUP = {
+        D65: {
+            m: [[0.4124564, 0.3575761, 0.1804375], [0.2126729, 0.7151522, 0.0721750], [0.0193339, 0.1191920, 0.9503041]],
+            w: [0.95047, 1.0, 1.08883]
+        },
+        D50: {
+            m: [[0.4360747, 0.3850649, 0.1430804], [0.2225045, 0.7168786, 0.0606169], [0.0139322, 0.0971045, 0.7141733]],
+            w: [0.96422, 1.0, 0.82521]
+        }
+    };
+
+    function rgbToLab(r, g, b, illuminant = 'D65') {
+        const { m, w } = LAB_SETUP[illuminant];
         const lin = c => {
             c /= 255;
             return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
         };
         const R = lin(r), G = lin(g), B = lin(b);
-        let x = (R * 0.4124564 + G * 0.3575761 + B * 0.1804375) / 0.95047;
-        let y = (R * 0.2126729 + G * 0.7151522 + B * 0.0721750);
-        let z = (R * 0.0193339 + G * 0.1191920 + B * 0.9503041) / 1.08883;
         const f = t => t > 0.008856 ? Math.cbrt(t) : (7.787 * t) + 16 / 116;
-        x = f(x); y = f(y); z = f(z);
+        const x = f((m[0][0] * R + m[0][1] * G + m[0][2] * B) / w[0]);
+        const y = f((m[1][0] * R + m[1][1] * G + m[1][2] * B) / w[1]);
+        const z = f((m[2][0] * R + m[2][1] * G + m[2][2] * B) / w[2]);
         return [116 * y - 16, 500 * (x - y), 200 * (y - z)];
+    }
+
+    function formatLab(lab) {
+        // + 0 verhindert die Anzeige von "-0.0"
+        const v = lab.map(x => (Math.round(x * 10) / 10 + 0).toFixed(1));
+        return 'L ' + v[0] + ' · a ' + v[1] + ' · b ' + v[2];
     }
 
     function hexToRgb(hex) {
@@ -292,6 +320,8 @@
     const ralHex = document.getElementById('ralHex');
     const copyBtn = document.getElementById('copyBtn');
     const note = document.getElementById('note');
+    const labD50 = document.getElementById('labD50');
+    const labD65 = document.getElementById('labD65');
 
     // crypto.subtle gibt es nur in sicheren Kontexten (HTTPS oder localhost)
     const cryptoAvailable = !!(window.crypto && window.crypto.subtle);
@@ -317,16 +347,22 @@
             ralOutput.textContent = 'RAL ' + ral.code + ' ' + ral.name;
             ralSwatch.style.backgroundColor = ral.hex;
             ralHex.textContent = ral.hex;
+            const rgb = hexToRgb(hexColor);
+            labD50.textContent = formatLab(rgbToLab(...rgb, 'D50'));
+            labD65.textContent = formatLab(rgbToLab(...rgb, 'D65'));
         } else {
             ralOutput.textContent = '–';
             ralSwatch.style.backgroundColor = '#333333';
             ralHex.textContent = '';
+            labD50.textContent = '–';
+            labD65.textContent = '–';
         }
     });
 
     copyBtn.addEventListener('click', async () => {
         const originalText = copyBtn.textContent;
-        const ralText = ralOutput.textContent !== '–' ? ' / ' + ralOutput.textContent : '';
+        const hasValue = ralOutput.textContent !== '–';
+        const ralText = hasValue ? ' / ' + ralOutput.textContent + ' / Lab(D50) ' + labD50.textContent : '';
         let label;
         try {
             await navigator.clipboard.writeText(output.textContent + ralText);
