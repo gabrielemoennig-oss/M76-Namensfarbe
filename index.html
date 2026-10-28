@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>mönch76 | digitaler spiegel</title>
+    <title>Namensfarbe | stimmen.me</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -122,6 +122,11 @@
         .lab-content > div + div {
             margin-top: 6px;
         }
+        .rgb-text {
+            color: #888888;
+            font-size: 12px;
+            margin-left: 6px;
+        }
         .note {
             margin-top: 15px;
             font-size: 11px;
@@ -133,15 +138,15 @@
 <body>
 
 <div class="container">
-    <h1>mönch76</h1>
-    <div class="subtitle">digitaler spiegel // stimmen.me</div>
+    <h1>Namensfarbe</h1>
+    <div class="subtitle">digitaler spiegel von MOENCH 76 // stimmen.me</div>
 
     <input type="text" id="wordInput" placeholder="Begriff oder Satz eingeben..." autocomplete="off" aria-label="Begriff oder Satz eingeben">
 
     <div class="color-preview" id="colorPreview"></div>
 
     <div class="result-box">
-        <span>Matrikel-Farbwert: <span class="hex-value" id="hexOutput" aria-live="polite">#333333</span></span>
+        <span>Matrikel-Farbwert: <span class="hex-value" id="hexOutput" aria-live="polite">#333333</span> <span class="rgb-text" id="rgbOutput"></span></span>
         <button class="copy-btn" id="copyBtn" type="button">Kopieren</button>
     </div>
 
@@ -158,6 +163,14 @@
         <div class="lab-content">
             <div>Lab (D50): <span class="hex-value" id="labD50">–</span></div>
             <div>Lab (D65): <span class="hex-value" id="labD65">–</span></div>
+        </div>
+    </div>
+
+    <div class="result-box">
+        <div class="lab-content">
+            <div>Kontrast zu Weiß: <span class="hex-value" id="contrastWhite">–</span></div>
+            <div>Kontrast zu Schwarz: <span class="hex-value" id="contrastBlack">–</span></div>
+            <div>Hellbezugswert (berechnet): <span class="hex-value" id="hbwOutput">–</span></div>
         </div>
     </div>
 
@@ -255,6 +268,24 @@
         return [116 * y - 16, 500 * (x - y), 200 * (y - z)];
     }
 
+    // Relative Helligkeit nach WCAG (0 = schwarz, 1 = weiß); entspricht dem Y-Wert in XYZ
+    function relativeLuminance(rgb) {
+        const [R, G, B] = rgb.map(c => {
+            c /= 255;
+            return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+        });
+        return 0.2126 * R + 0.7152 * G + 0.0722 * B;
+    }
+
+    function contrastText(ratio) {
+        let tag;
+        if (ratio >= 7) tag = 'AAA';
+        else if (ratio >= 4.5) tag = 'AA';
+        else if (ratio >= 3) tag = 'nur große Schrift';
+        else tag = 'zu niedrig';
+        return ratio.toFixed(1) + ' : 1 (' + tag + ')';
+    }
+
     function formatLab(lab) {
         // + 0 verhindert die Anzeige von "-0.0"
         const v = lab.map(x => (Math.round(x * 10) / 10 + 0).toFixed(1));
@@ -322,6 +353,10 @@
     const note = document.getElementById('note');
     const labD50 = document.getElementById('labD50');
     const labD65 = document.getElementById('labD65');
+    const rgbOutput = document.getElementById('rgbOutput');
+    const contrastWhite = document.getElementById('contrastWhite');
+    const contrastBlack = document.getElementById('contrastBlack');
+    const hbwOutput = document.getElementById('hbwOutput');
 
     // crypto.subtle gibt es nur in sicheren Kontexten (HTTPS oder localhost)
     const cryptoAvailable = !!(window.crypto && window.crypto.subtle);
@@ -350,12 +385,21 @@
             const rgb = hexToRgb(hexColor);
             labD50.textContent = formatLab(rgbToLab(...rgb, 'D50'));
             labD65.textContent = formatLab(rgbToLab(...rgb, 'D65'));
+            rgbOutput.textContent = 'rgb(' + rgb.join(', ') + ')';
+            const lum = relativeLuminance(rgb);
+            contrastWhite.textContent = contrastText(1.05 / (lum + 0.05));
+            contrastBlack.textContent = contrastText((lum + 0.05) / 0.05);
+            hbwOutput.textContent = Math.round(lum * 100) + ' von 100';
         } else {
             ralOutput.textContent = '–';
             ralSwatch.style.backgroundColor = '#333333';
             ralHex.textContent = '';
             labD50.textContent = '–';
             labD65.textContent = '–';
+            rgbOutput.textContent = '';
+            contrastWhite.textContent = '–';
+            contrastBlack.textContent = '–';
+            hbwOutput.textContent = '–';
         }
     });
 
