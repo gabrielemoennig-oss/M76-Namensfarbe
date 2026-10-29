@@ -22,7 +22,7 @@
             padding: 30px;
             border-radius: 8px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-            max-width: 560px;
+            max-width: 600px;
             width: 100%;
             text-align: center;
             box-sizing: border-box;
@@ -110,11 +110,6 @@
         .add-btn:disabled {
             opacity: 0.4;
             cursor: default;
-        }
-        .add-btn.full {
-            width: 100%;
-            padding: 9px 12px;
-            margin-top: 8px;
         }
         .palette-strip {
             display: flex;
@@ -242,11 +237,11 @@
             line-height: 1.45;
             white-space: pre-wrap;
             word-break: break-word;
-            max-height: 150px;
+            max-height: 250px;
             overflow-y: auto;
             text-align: left;
             background-color: #141414;
-            padding: 8px;
+            padding: 10px;
             border-radius: 3px;
             border: 1px solid #2a2a2a;
         }
@@ -285,7 +280,6 @@
             border-color: #777777;
         }
 
-        /* Druckansicht / PDF Export Styles */
         @media print {
             body {
                 background-color: #ffffff;
@@ -364,16 +358,16 @@
     </div>
 
     <div class="section-head">
-        <span>KI-Bildprompts & Außenauftritt</span>
-        <select id="langSelect" aria-label="Sprache der Prompts">
+        <span>Systemischer Master-Prompt</span>
+        <select id="langSelect" aria-label="Sprache des Prompts">
             <option value="de">Deutsch</option>
             <option value="en">English</option>
         </select>
     </div>
-    <div class="hint">Aussagekräftige, detaillierte Prompts für fotorealistische Visualisierungen basierend auf der aktuellen Farbpalette.</div>
+    <div class="hint">Ein einziger, umfassender Master-Prompt für die ganzheitliche Ausarbeitung des Farbkonzepts über alle Anwendungsbereiche hinweg (inkl. Originalfarben, CIELAB-Metrik und Kombinationsvorschlägen).</div>
 
     <div id="promptList"></div>
-    <button class="add-btn full" id="copyAllBtn" type="button">Alle drei Bild-Prompts kopieren</button>
+    <button class="add-btn full" id="copyMasterBtn" type="button">Master-Prompt kopieren</button>
 
     <button class="print-btn" id="printBtn" type="button">Farbkonzept als PDF / drucken</button>
 
@@ -411,7 +405,7 @@
 
     function formatLab(lab) {
         const v = lab.map(x => (Math.round(x * 10) / 10 + 0).toFixed(1));
-        return 'L ' + v[0] + ' · a ' + v[1] + ' · b ' + v[2];
+        return 'L* ' + v[0] + ' · a* ' + v[1] + ' · b* ' + v[2];
     }
 
     function hexToRgb(hex) {
@@ -531,203 +525,72 @@
         return join(mod, noun);
     }
 
-    function roleText(i, n, lang) {
+    // Erstellung des ultimativen Master-Prompts
+    function buildMasterPrompt(entries, lang) {
         const de = lang === 'de';
-        if (n === 1) return de ? 'alleinige Farbe, in mehreren Helligkeitsstufen einsetzen' : 'sole colour, use in several lightness levels';
-        if (n === 2) {
-            if (i === 0) return de ? 'Hauptfarbe (ca. 70 %)' : 'main colour (approx. 70%)';
-            return de ? 'Akzentfarbe (ca. 30 %)' : 'accent colour (approx. 30%)';
-        }
-        if (i === 0) return de ? 'Hauptfarbe (ca. 60 %)' : 'main colour (approx. 60%)';
-        if (i === 1) return de ? 'Zweitfarbe (ca. 30 %)' : 'secondary colour (approx. 30%)';
-        return de ? 'Akzentfarbe (zusammen ca. 10 %)' : 'accent colour (approx. 10% in total)';
-    }
+        if (entries.length === 0) return de ? 'Keine Farbdaten vorhanden.' : 'No color data available.';
 
-    function buildContext(entries, lang) {
-        const de = lang === 'de';
-        const n = entries.length;
-        const word = de ? 'Farbe' : 'Colour';
-        const ref = i => word + ' ' + (i + 1);
-        const c1 = ref(0);
-        const c2 = n >= 2 ? ref(1) : c1;
-        let acc;
-        if (n >= 4) acc = word + ' 3–' + n;
-        else if (n === 3) acc = ref(2);
-        else acc = c2;
-
-        const palette = entries.map((e, i) => {
-            const desc = describeColor(hexToRgb(e.hex), lang);
-            return '- ' + ref(i) + ': ' + desc + ' (' + e.hex + ') – ' + roleText(i, n, lang);
-        }).join('\n');
-
-        const mainOnWhiteOk = contrastWithWhite(hexToRgb(entries[0].hex)) >= 4.5;
-        let headingRule;
-        if (de) {
-            headingRule = mainOnWhiteOk
-                ? c1 + ' für Überschriften, Header und große Flächen; Fließtext in sehr dunklem Grau.'
-                : c1 + ' nur für Header, Hintergrundbereiche und große Flächen (nicht für Text); Überschriften und Fließtext in sehr dunklem Grau, damit der Kontrast stimmt.';
-        } else {
-            headingRule = mainOnWhiteOk
-                ? c1 + ' for headings, header and large areas; body text in very dark grey.'
-                : c1 + ' only for header, background areas and large surfaces (not for text); headings and body text in very dark grey to keep sufficient contrast.';
-        }
-        return { n, c1, c2, acc, palette, headingRule };
-    }
-
-    // VOLLSTÄNDIG ÜBERARBEITETE, HOCHWERTIGE UND AUSDRUCKSSSTARKE BILD-PROMPTS
-    const PROMPTS = {
-        de: {
-            room: x =>
-`Editorial interior design photography of a serene, minimalist consulting and reception room. 
-The space is characterized by architectural clarity, calm surfaces, and premium natural materials.
-
-BINDING COLOR PALETTE:
-${x.palette}
-
-MATERIAL AND SURFACE DISTRIBUTION:
-- Primary surface color (${x.c1}) is applied to expansive structural elements, such as a matte-painted architectural accent wall or bespoke built-in shelving units.
-- Secondary structural tone (${x.c2}) informs the sophisticated upholstered seating, linen drapery, and soft architectural textiles.
-- Accent tone (${x.acc}) appears strictly as highly curated, micro-level focal points: ceramic objects, art book spines, or delicate botanical vessels.
-- Supporting elements: Oiled natural oak flooring, raw plaster walls, black powder-coated steel details, and lush indoor greenery (such as Ficus lyrata).
-
-LIGHTING AND ATMOSPHERE:
-Soft, diffuse daylight entering from tall side windows, creating gentle shadows and an airy, contemplative atmosphere.
-
-VISUAL STYLE:
-Shot on 35mm lens, architectural digest style, pristine framing, perfectly balanced focal depth, hyper-realistic texture rendering. Absolutely NO text, NO watermarks, NO brand symbols, NO human figures.`,
-
-            web: x =>
-`Professional UI/UX product mock-up photography showing an ultra-clean, modern laptop and a smartphone neatly arranged on a solid, matte light-oak desktop. 
-The screens display a sophisticated, spacious corporate web interface adhering to strict grid alignment and generous whitespace.
-
-BINDING COLOR PALETTE:
-${x.palette}
-
-UI HIERARCHY & COLOR APPLICATION:
-- Generous white and light-grey background canvas.
-- Structural elements and primary headers utilize ${x.headingRule}
-- Content container cards and intermediate layout boxes are styled with ${x.c2}.
-- Interactive elements, primary call-to-action buttons, and precise UI highlights feature ${x.acc}.
-- On the screens, content is represented solely through abstract wireframe grid blocks, minimal UI line elements, and atmospheric thumbnail placeholders of natural landscapes—NO readable text or dummy paragraphs.
-
-LIGHTING AND ATMOSPHERE:
-Clean studio lighting with soft overhead diffusion, subtle ambient reflection on glass screens, crisp high-end commercial tech presentation.
-
-VISUAL STYLE:
-Commercial product photography, tack-sharp focus, editorial design layout, minimalist tech aesthetic. Absolutely NO readable text, NO real brand logos, NO watermarks.`,
-
-            cloth: x =>
-`High-end editorial fashion lookbook photography depicting an adult model wearing a timeless, impeccably tailored, and comfortable capsule outfit against a neutral, softly lit studio backdrop.
-
-BINDING COLOR PALETTE:
-${x.palette}
-
-GARMENT AND TEXTILE DISTRIBUTION:
-- Primary garment piece (such as a structured wool coat or tailored trousers) is executed in ${x.c1}.
-- Layered upper garment (such as a fine-knit cashmere sweater or structured overshirt) features ${x.c2}.
-- Micro-accessories (such as a fine silk scarf, leather key strap, or subtle footwear piping) incorporate ${x.acc}.
-- Natural, high-grade organic fabrics: heavy linen, raw wool, fine cotton, and matte leather with visible tactile grains.
-
-LIGHTING AND ATMOSPHERE:
-Soft, directional north-window studio lighting, gentle tonal gradation, elegant and grounded personal presentation.
-
-VISUAL STYLE:
-Minimalist fashion magazine editorial, full-length framing from the front, museum-grade textile rendering, sophisticated composure. Absolutely NO text, NO brand tags, NO logos, NO watermarks.`
-        },
-        en: {
-            room: x =>
-`Editorial interior design photography of a serene, minimalist consulting and reception room. 
-The space is characterized by architectural clarity, calm surfaces, and premium natural materials.
-
-BINDING COLOR PALETTE:
-${x.palette}
-
-MATERIAL AND SURFACE DISTRIBUTION:
-- Primary surface color (${x.c1}) is applied to expansive structural elements, such as a matte-painted architectural accent wall or bespoke built-in shelving units.
-- Secondary structural tone (${x.c2}) informs the sophisticated upholstered seating, linen drapery, and soft architectural textiles.
-- Accent tone (${x.acc}) appears strictly as highly curated, micro-level focal points: ceramic objects, art book spines, or delicate botanical vessels.
-- Supporting elements: Oiled natural oak flooring, raw plaster walls, black powder-coated steel details, and lush indoor greenery (such as Ficus lyrata).
-
-LIGHTING AND ATMOSPHERE:
-Soft, diffuse daylight entering from tall side windows, creating gentle shadows and an airy, contemplative atmosphere.
-
-VISUAL STYLE:
-Shot on 35mm lens, architectural digest style, pristine framing, perfectly balanced focal depth, hyper-realistic texture rendering. Absolutely NO text, NO watermarks, NO brand symbols, NO human figures.`,
-
-            web: x =>
-`Professional UI/UX product mock-up photography showing an ultra-clean, modern laptop and a smartphone neatly arranged on a solid, matte light-oak desktop. 
-The screens display a sophisticated, spacious corporate web interface adhering to strict grid alignment and generous whitespace.
-
-BINDING COLOR PALETTE:
-${x.palette}
-
-UI HIERARCHY & COLOR APPLICATION:
-- Generous white and light-grey background canvas.
-- Structural elements and primary headers utilize ${x.headingRule}
-- Content container cards and intermediate layout boxes are styled with ${x.c2}.
-- Interactive elements, primary call-to-action buttons, and precise UI highlights feature ${x.acc}.
-- On the screens, content is represented solely through abstract wireframe grid blocks, minimal UI line elements, and atmospheric thumbnail placeholders of natural landscapes—NO readable text or dummy paragraphs.
-
-LIGHTING AND ATMOSPHERE:
-Clean studio lighting with soft overhead diffusion, subtle ambient reflection on glass screens, crisp high-end commercial tech presentation.
-
-VISUAL STYLE:
-Commercial product photography, tack-sharp focus, editorial design layout, minimalist tech aesthetic. Absolutely NO readable text, NO real brand logos, NO watermarks.`,
-
-            cloth: x =>
-`High-end editorial fashion lookbook photography depicting an adult model wearing a timeless, impeccably tailored, and comfortable capsule outfit against a neutral, softly lit studio backdrop.
-
-BINDING COLOR PALETTE:
-${x.palette}
-
-GARMENT AND TEXTILE DISTRIBUTION:
-- Primary garment piece (such as a structured wool coat or tailored trousers) is executed in ${x.c1}.
-- Layered upper garment (such as a fine-knit cashmere sweater or structured overshirt) features ${x.c2}.
-- Micro-accessories (such as a fine silk scarf, leather key strap, or subtle footwear piping) incorporate ${x.acc}.
-- Natural, high-grade organic fabrics: heavy linen, raw wool, fine cotton, and matte leather with visible tactile grains.
-
-LIGHTING AND ATMOSPHERE:
-Soft, directional north-window studio lighting, gentle tonal gradation, elegant and grounded personal presentation.
-
-VISUAL STYLE:
-Minimalist fashion magazine editorial, full-length framing from the front, museum-grade textile rendering, sophisticated composure. Absolutely NO text, NO brand tags, NO logos, NO watermarks.`
-        }
-    };
-
-    const FARBKONZEPT_AUFTRAG = `SYSTEMISCHES FARBKONZEPT – ANALYSE, VISUALISIERUNG UND ANWENDUNG
-... (analytischer Kernauftrag) ...`;
-
-    function formatLabStar(lab) {
-        const v = lab.map(x => (Math.round(x * 10) / 10 + 0).toFixed(1));
-        return 'L* ' + v[0] + ' · a* ' + v[1] + ' · b* ' + v[2];
-    }
-
-    function buildBrief() {
-        if (entries.length === 0) return null;
-        const primaryFilled = primaryInput.value.trim() !== '';
-        const others = entries.filter(e => e.input !== primaryInput).length;
-        const lines = [
-            'FARBDATEN',
-            'Primäre Bezeichnung: ' + (primaryFilled ? entries[0].text : 'nicht angegeben'),
-            'Weitere Elemente: ' + others,
-            '',
-            'Herkunft der Farbwerte: SHA-256 (erste drei Bytes). HEX gilt für Bildschirm, CIELAB (D50) für Materialwahl.',
-            ''
-        ];
-        entries.forEach((e, i) => {
+        const paletteDetails = entries.map((e, i) => {
             const rgb = hexToRgb(e.hex);
-            lines.push((i + 1) + '. Bezeichnung: ' + e.text);
-            lines.push('   HEX: ' + e.hex);
-            lines.push('   CIELAB (D50): ' + formatLabStar(rgbToLab(...rgb, 'D50')));
-        });
-        return lines.join('\n');
-    }
+            const lab50 = formatLab(rgbToLab(...rgb, 'D50'));
+            const desc = describeColor(rgb, lang);
+            return `${i + 1}. Bezeichnung: "${e.text}"\n   - HEX (Bildschirm): ${e.hex}\n   - CIELAB D50 (Material): ${lab50}\n   - Farbbeschreibung: ${desc}`;
+        }).join('\n\n');
 
-    const PROMPT_KINDS = [
-        { key: 'room', title: { de: 'Raumgestaltung (Interior Design Prompt)', en: 'Interior Design Prompt' } },
-        { key: 'web', title: { de: 'Website (UI/UX Mockup Prompt)', en: 'UI/UX Mockup Prompt' } },
-        { key: 'cloth', title: { de: 'Kleidungsstil (Fashion Editorial Prompt)', en: 'Fashion Editorial Prompt' } }
-    ];
+        if (de) {
+            return `DU BIST EIN SYSTEMISCHER FARBKONZEPT-ENTWICKELR, VISUELLER MARKENANALYST UND DESIGN-ARCHITEKT.
+
+Deine Aufgabe ist es, auf Basis der folgenden exakt berechneten und verbindlichen Farbdaten ein vollständiges, zusammenhängendes und professionelles CI-/CD-Farbkonzept auszuarbeiten. Das Konzept deckt alle denkbaren Anwendungsbereiche ab (digitale Medien, Web-UI, Raum- und Innenarchitektur, Print, Verpackungen, haptische Materialien, Textil- und Bekleidungskonzepte).
+
+---
+
+### 1. VERBINDLICHE EINGABEDATEN (ORIGINALWERTE)
+Die folgenden Farben wurden mathematisch aus den Bezeichnungen abgeleitet und bilden den unverrückbaren Kern des Systems:
+
+${paletteDetails}
+
+---
+
+### 2. ANALYSE & METHODISCHE ANFORDERUNGEN
+1. **Farbmetrische Strenge:** Analysiere die Farben anhand ihrer Helligkeit (L*) und ihrer Achsen (a*, b*). Erkläre die Unterschiede in Helligkeit und Sättigung sachlich.
+2. **Farbarchitektur & Rollenverteilung:** Leite eine klare Hierarchie ab (Primäre Markenfarbe, Struktur-/Basiston, Verbindungsfarben, Signal- und Akzenttöne). 
+3. **Ergänzende Kombinationsvorschläge:** Da ein reines System oft funktionale Neutrals oder dezente Kontraste benötigt, schlage basierend auf den CIELAB-Werten 2 bis 3 harmonische, professionelle Ergänzungsfarben vor (z. B. ein warmes Off-White, ein tiefes Anthrazit/Schwarz oder ein natürlicher Neutralton), die perfekt mit den Originalfarben harmonieren, ohne sie zu verfälschen.
+4. **Ganzheitliche Anwendungsbereiche:**
+   - **Digital & Web (UI/UX):** Layoutstruktur, Kontraste (WCAG-Richtlinien), Buttons, Header, Weißraum.
+   - **Raum- & Objektgestaltung:** Wandfarben, Materialien (Holz, Metall, Stoffe), Lichtführung, zonale Verteilung.
+   - **Corporate Identity & Print:** Geschäftsausstattung (Visitenkarten, Briefpapier), Verpackungen, Materialveredelungen (Prägungen, Lacke).
+   - **Persönlicher Stil & Textilien:** Kapselgarderobe, Stoffqualitäten, Alltags- und Präsenzkombinationen.
+5. **Visuelle Master-Szenarien (Bildkonzepte):** Erstelle am Ende des Konzepts für die wichtigsten Bereiche (z. B. Interior, Web-Interface, Editorial/Lookbook) detaillierte, fotorealistische Bild-Prompts (für Midjourney/DALL-E), die genau diese Farbarchitektur und Ästhetik visuell greifbar machen.
+
+Arbeite strukturiert, analytisch, elegant und redaktionell aufbereitet. Vermeide beliebige Floskeln.`;
+        } else {
+            return `YOU ARE A SYSTEMIC COLOR CONCEPT DEVELOPER, VISUAL BRAND ANALYST, AND DESIGN ARCHITECT.
+
+Your task is to develop a comprehensive, cohesive, and professional corporate identity color concept based on the precisely calculated and binding color data provided below. The concept covers all possible application areas (digital media, web UI, interior architecture, print, packaging, tactile materials, and textile/apparel styling).
+
+---
+
+### 1. BINDING INPUT DATA (ORIGINAL VALUES)
+The following colors were mathematically derived from the input designations and form the immutable core of the system:
+
+${paletteDetails}
+
+---
+
+### 2. ANALYSIS & METHODOLOGICAL REQUIREMENTS
+1. **Colorimetric Rigor:** Analyze the colors based on their lightness (L*) and axes (a*, b*). Explain differences in lightness and saturation objectively.
+2. **Color Architecture & Hierarchy:** Derive a clear functional hierarchy (primary brand color, structural base tone, connecting colors, signal and accent tones).
+3. **Complementary Combination Proposals:** Propose 2 to 3 harmonious, professional supplementary colors based on the CIELAB values (e.g., a warm off-white, a deep charcoal/black, or a natural neutral) that integrate seamlessly without altering the original values.
+4. **Holistic Application Fields:**
+   - **Digital & Web (UI/UX):** Layout structure, contrast ratios (WCAG), buttons, headers, whitespace.
+   - **Interior & Spatial Design:** Wall paints, materials (wood, metal, fabrics), lighting, zonal distribution.
+   - **Corporate Identity & Print:** Stationery (business cards, letterhead), packaging, material finishes.
+   - **Personal Style & Textiles:** Capsule wardrobe, fabric qualities, everyday and professional presence.
+5. **Visual Master Scenarios (Image Concepts):** Provide detailed, photorealistic image generation prompts for key areas (interior, web interface, editorial lookbook) embodying this exact color architecture.
+
+Work in a structured, analytical, elegant, and editorial manner. Avoid generic fluff.`;
+        }
+    }
 
     const inputsContainer = document.getElementById('inputsContainer');
     const addInputBtn = document.getElementById('addInputBtn');
@@ -743,7 +606,7 @@ Minimalist fashion magazine editorial, full-length framing from the front, museu
     const contrastBlack = document.getElementById('contrastBlack');
     const hbwOutput = document.getElementById('hbwOutput');
     const copyBtn = document.getElementById('copyBtn');
-    const copyAllBtn = document.getElementById('copyAllBtn');
+    const copyMasterBtn = document.getElementById('copyMasterBtn');
     const printBtn = document.getElementById('printBtn');
     const langSelect = document.getElementById('langSelect');
     const promptList = document.getElementById('promptList');
@@ -833,7 +696,7 @@ Minimalist fashion magazine editorial, full-length framing from the front, museu
     function render() {
         renderPalette();
         renderDetail();
-        renderPrompts();
+        renderMasterPromptCard();
     }
 
     function renderPalette() {
@@ -892,69 +755,52 @@ Minimalist fashion magazine editorial, full-length framing from the front, museu
         copyText = entry.hex + ' / rgb(' + rgb.join(', ') + ') / Lab(D50) ' + lab50;
     }
 
-    function currentPrompts() {
+    function renderMasterPromptCard() {
+        promptList.innerHTML = '';
         const lang = langSelect.value;
-        if (entries.length === 0) return null;
-        const ctx = buildContext(entries, lang);
-        return PROMPT_KINDS.map(kind => ({
-            title: kind.title[lang],
-            text: PROMPTS[lang][kind.key](ctx)
-        }));
-    }
+        const text = buildMasterPrompt(entries, lang);
+        copyMasterBtn.disabled = entries.length === 0;
 
-    function makePromptCard(titleText, text, btnLabel) {
         const box = document.createElement('div');
         box.className = 'result-box prompt-card';
         const header = document.createElement('div');
         header.className = 'prompt-header';
         const title = document.createElement('span');
         title.className = 'prompt-title';
-        title.textContent = titleText;
+        title.textContent = lang === 'de' ? 'Vollständiges Master-Konzept (Prompt)' : 'Complete Master Concept (Prompt)';
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'copy-btn';
-        btn.textContent = btnLabel;
+        btn.textContent = lang === 'de' ? 'Kopieren' : 'Copy';
         header.appendChild(title);
         header.appendChild(btn);
 
         const body = document.createElement('div');
         body.className = 'prompt-text';
-        body.textContent = text || '–';
+        body.textContent = entries.length > 0 ? text : (lang === 'de' ? 'Bitte oben mindestens einen Namen eingeben.' : 'Please enter at least one name above.');
 
-        if (text) btn.addEventListener('click', () => copyToClipboard(btn, text));
+        if (entries.length > 0) btn.addEventListener('click', () => copyToClipboard(btn, text));
         else btn.disabled = true;
 
         box.appendChild(header);
         box.appendChild(body);
-        return box;
-    }
-
-    function renderPrompts() {
-        promptList.innerHTML = '';
-        const prompts = currentPrompts();
-        copyAllBtn.disabled = !prompts;
-        PROMPT_KINDS.forEach((kind, i) => {
-            promptList.appendChild(makePromptCard(
-                kind.title[langSelect.value], prompts ? prompts[i].text : null, 'Prompt kopieren'));
-        });
+        promptList.appendChild(box);
     }
 
     copyBtn.addEventListener('click', () => {
         if (copyText) copyToClipboard(copyBtn, copyText);
     });
 
-    copyAllBtn.addEventListener('click', () => {
-        const prompts = currentPrompts();
-        if (!prompts) return;
-        const all = prompts.map((p, i) => '=== ' + p.title + ' ===\n' + p.text).join('\n\n');
-        copyToClipboard(copyAllBtn, all);
+    copyMasterBtn.addEventListener('click', () => {
+        const text = buildMasterPrompt(entries, langSelect.value);
+        if (text) copyToClipboard(copyMasterBtn, text);
     });
 
     printBtn.addEventListener('click', () => {
         window.print();
     });
 
-    langSelect.addEventListener('change', renderPrompts);
+    langSelect.addEventListener('change', renderMasterPromptCard);
     addInputBtn.addEventListener('click', addInputField);
     primaryInput.addEventListener('input', processPalette);
 
