@@ -111,6 +111,11 @@
             opacity: 0.4;
             cursor: default;
         }
+        .add-btn.full {
+            width: 100%;
+            padding: 9px 12px;
+            margin-top: 8px;
+        }
         .palette-strip {
             display: flex;
             flex-wrap: wrap;
@@ -261,56 +266,6 @@
             color: #888888;
             min-height: 14px;
         }
-        .print-btn {
-            background-color: #2a2a2a;
-            border: 1px solid #555555;
-            color: #ffffff;
-            padding: 10px 16px;
-            font-size: 13px;
-            border-radius: 4px;
-            cursor: pointer;
-            width: 100%;
-            margin-top: 20px;
-            transition: all 0.2s;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        .print-btn:hover {
-            background-color: #333333;
-            border-color: #777777;
-        }
-
-        @media print {
-            body {
-                background-color: #ffffff;
-                color: #000000;
-                display: block;
-                padding: 10px;
-            }
-            .container {
-                background-color: #ffffff;
-                box-shadow: none;
-                max-width: 100%;
-                padding: 0;
-            }
-            input, button, select, .remove-btn, .add-btn, .print-btn {
-                display: none !important;
-            }
-            .result-box, .prompt-text {
-                background-color: #f9f9f9 !important;
-                color: #333333 !important;
-                border: 1px solid #cccccc !important;
-            }
-            h1, .subtitle, .section-head, .prompt-title, .value {
-                color: #000000 !important;
-            }
-            .sub-value, .hint, .note, .field-label {
-                color: #555555 !important;
-            }
-            .prompt-text {
-                max-height: none !important;
-            }
-        }
     </style>
 </head>
 <body>
@@ -364,12 +319,10 @@
             <option value="en">English</option>
         </select>
     </div>
-    <div class="hint">Ein einziger, umfassender Master-Prompt für die ganzheitliche Ausarbeitung des Farbkonzepts über alle Anwendungsbereiche hinweg (inkl. Originalfarben, CIELAB-Metrik und Kombinationsvorschlägen).</div>
+    <div class="hint">Ein einziger, umfassender Master-Prompt für die ganzheitliche Ausarbeitung des Farbkonzepts über alle Anwendungsbereiche hinweg (inkl. Originalfarben, CIELAB-Metrik, Fahrzeug-/Objektdesign und Kombinationsvorschlägen).</div>
 
     <div id="promptList"></div>
     <button class="add-btn full" id="copyMasterBtn" type="button">Master-Prompt kopieren</button>
-
-    <button class="print-btn" id="printBtn" type="button">Farbkonzept als PDF / drucken</button>
 
     <div class="note" id="note" role="status"></div>
 </div>
@@ -525,7 +478,6 @@
         return join(mod, noun);
     }
 
-    // Erstellung des ultimativen Master-Prompts
     function buildMasterPrompt(entries, lang) {
         const de = lang === 'de';
         if (entries.length === 0) return de ? 'Keine Farbdaten vorhanden.' : 'No color data available.';
@@ -534,13 +486,15 @@
             const rgb = hexToRgb(e.hex);
             const lab50 = formatLab(rgbToLab(...rgb, 'D50'));
             const desc = describeColor(rgb, lang);
-            return `${i + 1}. Bezeichnung: "${e.text}"\n   - HEX (Bildschirm): ${e.hex}\n   - CIELAB D50 (Material): ${lab50}\n   - Farbbeschreibung: ${desc}`;
+            return `${i + 1}. Bezeichnung: "${e.text}"\n   - HEX (Bildschirm): ${e.hex}\n   - CIELAB D50 (Material/Lack): ${lab50}\n   - Farbbeschreibung: ${desc}`;
         }).join('\n\n');
 
         if (de) {
-            return `DU BIST EIN SYSTEMISCHER FARBKONZEPT-ENTWICKELR, VISUELLER MARKENANALYST UND DESIGN-ARCHITEKT.
+            return `DU BIST EIN SYSTEMISCHER FARBKONZEPT-ENTWICKLER, VISUELLER MARKENANALYST UND DESIGN-ARCHITEKT.
 
-Deine Aufgabe ist es, auf Basis der folgenden exakt berechneten und verbindlichen Farbdaten ein vollständiges, zusammenhängendes und professionelles CI-/CD-Farbkonzept auszuarbeiten. Das Konzept deckt alle denkbaren Anwendungsbereiche ab (digitale Medien, Web-UI, Raum- und Innenarchitektur, Print, Verpackungen, haptische Materialien, Textil- und Bekleidungskonzepte).
+Deine Aufgabe ist es, auf Basis der folgenden exakt berechneten und verbindlichen Farbdaten ein vollständiges, zusammenhängendes CI-/CD-Farbkonzept für SÄMTLICHE Anwendungsbereiche zu entwickeln.
+
+Das Konzept beschränkt sich nicht auf Web und Räume, sondern erstreckt sich als durchgängiges System auf alle physischen Objekte, Produkte und persönlichen Besitztümer (z. B. Fahrzeuglackierung/Folierung, Innenraum-Materialien/Leder/Nähte, Hardware, Textilien, Print und digitale Oberflächen).
 
 ---
 
@@ -551,22 +505,30 @@ ${paletteDetails}
 
 ---
 
-### 2. ANALYSE & METHODISCHE ANFORDERUNGEN
-1. **Farbmetrische Strenge:** Analysiere die Farben anhand ihrer Helligkeit (L*) und ihrer Achsen (a*, b*). Erkläre die Unterschiede in Helligkeit und Sättigung sachlich.
-2. **Farbarchitektur & Rollenverteilung:** Leite eine klare Hierarchie ab (Primäre Markenfarbe, Struktur-/Basiston, Verbindungsfarben, Signal- und Akzenttöne). 
-3. **Ergänzende Kombinationsvorschläge:** Da ein reines System oft funktionale Neutrals oder dezente Kontraste benötigt, schlage basierend auf den CIELAB-Werten 2 bis 3 harmonische, professionelle Ergänzungsfarben vor (z. B. ein warmes Off-White, ein tiefes Anthrazit/Schwarz oder ein natürlicher Neutralton), die perfekt mit den Originalfarben harmonieren, ohne sie zu verfälschen.
-4. **Ganzheitliche Anwendungsbereiche:**
+### 2. ANFORDERUNGEN AN DIE AUSARBEITUNG
+1. **Systemische Rollenzuweisung:**
+   Weise jedem Begriff (z. B. Nachname, Rufname, Marke, Projekt) seine funktionale Rolle im Gesamtsystem zu (z. B. Hauptfarbe für Großflächen/Fahrzeugkarosserie, Strukturton für Innenräume/Module, Akzentton für Details/Interieur).
+2. **Material- & Produktspezifikation (Fahrzeug / Hardware / Objekt):**
+   - Welcher CIELAB-Wert (D50) gilt als verbindliche Vorgabe für Karosserielackierung, Folierung oder Hardware-Einfärbung?
+   - Wie wird die Farbe auf unterschiedlichen Oberflächen übersetzt (z. B. seidenmatte Karosserie, eloxiertes Aluminium, textiles Gewebe, Leder)?
+   - Wie werden die übrigen Farben der Palette als Innenraum-Akzente, Kontrastnähte, Zierleisten oder Detail-Highlights kombiniert?
+3. **Ganzheitliche Systemintegration:**
    - **Digital & Web (UI/UX):** Layoutstruktur, Kontraste (WCAG-Richtlinien), Buttons, Header, Weißraum.
-   - **Raum- & Objektgestaltung:** Wandfarben, Materialien (Holz, Metall, Stoffe), Lichtführung, zonale Verteilung.
-   - **Corporate Identity & Print:** Geschäftsausstattung (Visitenkarten, Briefpapier), Verpackungen, Materialveredelungen (Prägungen, Lacke).
-   - **Persönlicher Stil & Textilien:** Kapselgarderobe, Stoffqualitäten, Alltags- und Präsenzkombinationen.
-5. **Visuelle Master-Szenarien (Bildkonzepte):** Erstelle am Ende des Konzepts für die wichtigsten Bereiche (z. B. Interior, Web-Interface, Editorial/Lookbook) detaillierte, fotorealistische Bild-Prompts (für Midjourney/DALL-E), die genau diese Farbarchitektur und Ästhetik visuell greifbar machen.
+   - **Raum & Architektur:** Wände, Möbel, Lichtführung, zonale Verteilung.
+   - **Fahrzeug & Objekt:** Exterieur-Lackierung, Interieur-Materialien, Zierdetails, Produktdesign.
+   - **Kleidung & Branding:** Textilkombinationen, Kapselgarderobe, Geschäftsausstattung, Printmedien.
+4. **Ergänzende System-Neutrals:**
+   Schlage basierend auf den CIELAB-Helligkeitswerten 2 bis 3 funktionale Ergänzungsfarben vor (z. B. tiefes Mattgrau, Off-White oder Naturtöne), die als neutrale Trägerflächen dienen.
+5. **Fotorealistischer Master-Bild-Prompt:**
+   Generiere am Ende einen fotorealistischen Bild-Prompt (für DALL-E/Midjourney), der die Farbwelt an einem konkreten, hochwertigen Designbeispiel (z. B. ein minimalistisches Fahrzeug-Interieur/Exterieur oder ein Produktdesign-Setup im Zusammenspiel mit den übrigen Medien) exakt visualisiert.
 
-Arbeite strukturiert, analytisch, elegant und redaktionell aufbereitet. Vermeide beliebige Floskeln.`;
+Arbeite strukturiert, analytisch, elegant und redaktionell aufbereitet.`;
         } else {
             return `YOU ARE A SYSTEMIC COLOR CONCEPT DEVELOPER, VISUAL BRAND ANALYST, AND DESIGN ARCHITECT.
 
-Your task is to develop a comprehensive, cohesive, and professional corporate identity color concept based on the precisely calculated and binding color data provided below. The concept covers all possible application areas (digital media, web UI, interior architecture, print, packaging, tactile materials, and textile/apparel styling).
+Your task is to develop a comprehensive, cohesive, and professional corporate identity color concept based on the precisely calculated and binding color data provided below.
+
+The concept is not limited to web and spaces, but extends as a continuous system across all physical objects, products, and personal belongings (e.g., vehicle paintwork/wrap, interior materials/leather/stitching, hardware, textiles, print, and digital surfaces).
 
 ---
 
@@ -578,17 +540,23 @@ ${paletteDetails}
 ---
 
 ### 2. ANALYSIS & METHODOLOGICAL REQUIREMENTS
-1. **Colorimetric Rigor:** Analyze the colors based on their lightness (L*) and axes (a*, b*). Explain differences in lightness and saturation objectively.
-2. **Color Architecture & Hierarchy:** Derive a clear functional hierarchy (primary brand color, structural base tone, connecting colors, signal and accent tones).
-3. **Complementary Combination Proposals:** Propose 2 to 3 harmonious, professional supplementary colors based on the CIELAB values (e.g., a warm off-white, a deep charcoal/black, or a natural neutral) that integrate seamlessly without altering the original values.
-4. **Holistic Application Fields:**
+1. **Systemic Role Allocation:**
+   Assign each term (e.g., surname, given name, brand, project) its functional role within the overall system (e.g., primary color for large surfaces/vehicle body, structural tone for interior/modules, accent tone for details).
+2. **Material & Product Specification (Vehicle / Hardware / Object):**
+   - Which CIELAB value (D50) serves as the binding specification for vehicle paint, wrapping, or hardware coloring?
+   - How is the color translated across different surfaces (e.g., satin matte bodywork, anodized aluminum, woven textiles, leather)?
+   - How are the remaining colors of the palette combined as interior accents, contrast stitching, trim elements, or detail highlights?
+3. **Holistic System Integration:**
    - **Digital & Web (UI/UX):** Layout structure, contrast ratios (WCAG), buttons, headers, whitespace.
-   - **Interior & Spatial Design:** Wall paints, materials (wood, metal, fabrics), lighting, zonal distribution.
-   - **Corporate Identity & Print:** Stationery (business cards, letterhead), packaging, material finishes.
-   - **Personal Style & Textiles:** Capsule wardrobe, fabric qualities, everyday and professional presence.
-5. **Visual Master Scenarios (Image Concepts):** Provide detailed, photorealistic image generation prompts for key areas (interior, web interface, editorial lookbook) embodying this exact color architecture.
+   - **Interior & Spatial Design:** Wall paints, materials, lighting, zonal distribution.
+   - **Vehicle & Product Design:** Exterior finish, interior materials, trim details, hardware design.
+   - **Personal Style & Branding:** Textile combinations, capsule wardrobe, stationery, print media.
+4. **Complementary System Neutrals:**
+   Propose 2 to 3 functional supplementary colors based on CIELAB lightness values (e.g., deep matte grey, off-white, or natural neutrals) to serve as neutral supporting surfaces.
+5. **Photorealistic Master Image Prompt:**
+   Generate a photorealistic image prompt (for DALL-E/Midjourney) at the end that precisely visualizes this color architecture through a high-end design example (e.g., a minimalist vehicle interior/exterior or product design setup).
 
-Work in a structured, analytical, elegant, and editorial manner. Avoid generic fluff.`;
+Work in a structured, analytical, elegant, and editorial manner.`;
         }
     }
 
@@ -607,7 +575,6 @@ Work in a structured, analytical, elegant, and editorial manner. Avoid generic f
     const hbwOutput = document.getElementById('hbwOutput');
     const copyBtn = document.getElementById('copyBtn');
     const copyMasterBtn = document.getElementById('copyMasterBtn');
-    const printBtn = document.getElementById('printBtn');
     const langSelect = document.getElementById('langSelect');
     const promptList = document.getElementById('promptList');
     const note = document.getElementById('note');
@@ -794,10 +761,6 @@ Work in a structured, analytical, elegant, and editorial manner. Avoid generic f
     copyMasterBtn.addEventListener('click', () => {
         const text = buildMasterPrompt(entries, langSelect.value);
         if (text) copyToClipboard(copyMasterBtn, text);
-    });
-
-    printBtn.addEventListener('click', () => {
-        window.print();
     });
 
     langSelect.addEventListener('change', renderMasterPromptCard);
