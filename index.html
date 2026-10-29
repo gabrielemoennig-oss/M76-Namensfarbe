@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Namensfarbe & Farbkonzept | stimmen.me</title>
+    <title>Namensfarbe | stimmen.me</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -11,7 +11,7 @@
             color: #e0e0e0;
             display: flex;
             justify-content: center;
-            align-items: center;
+            align-items: flex-start;
             min-height: 100vh;
             margin: 0;
             padding: 20px;
@@ -22,15 +22,16 @@
             padding: 30px;
             border-radius: 8px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-            max-width: 500px;
+            max-width: 560px;
             width: 100%;
             text-align: center;
+            box-sizing: border-box;
         }
         h1 {
             font-size: 24px;
             font-weight: 300;
             letter-spacing: 1px;
-            margin-bottom: 5px;
+            margin: 0 0 5px;
             color: #ffffff;
         }
         .subtitle {
@@ -48,12 +49,13 @@
         }
         input[type="text"] {
             flex-grow: 1;
+            min-width: 0;
             padding: 10px 12px;
             background-color: #1a1a1a;
             border: 1px solid #333333;
             border-radius: 4px;
             color: #ffffff;
-            font-size: 15px;
+            font-size: 16px;
             box-sizing: border-box;
             text-align: left;
         }
@@ -84,7 +86,11 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
+            margin: 14px 0 18px;
+        }
+        .count {
+            font-size: 11px;
+            color: #888888;
         }
         .add-btn {
             background: none;
@@ -96,86 +102,59 @@
             cursor: pointer;
             transition: all 0.2s;
         }
-        .add-btn:hover {
+        .add-btn:hover:not(:disabled) {
             border-color: #666666;
             color: #ffffff;
             background-color: #1f1f1f;
+        }
+        .add-btn:disabled {
+            opacity: 0.4;
+            cursor: default;
+        }
+        .add-btn.full {
+            width: 100%;
+            padding: 9px 12px;
+            margin-top: 8px;
+        }
+        .palette-strip {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 6px;
+            margin-bottom: 18px;
+            min-height: 44px;
+        }
+        .palette-swatch {
+            width: 44px;
+            height: 44px;
+            padding: 0;
+            border-radius: 4px;
+            border: 2px solid #333333;
+            background-color: #333333;
+            cursor: pointer;
+            transition: background-color 0.15s ease, border-color 0.15s ease;
+        }
+        .palette-swatch[aria-pressed="true"] {
+            border-color: #ffffff;
+        }
+        .palette-swatch.placeholder {
+            cursor: default;
         }
         .color-preview {
             width: 100%;
             max-width: 260px;
             aspect-ratio: 1 / 1;
             border-radius: 4px;
-            margin: 0 auto 20px;
+            margin: 0 auto 8px;
             transition: background-color 0.15s ease;
             background-color: #333333;
         }
-        .palette-preview {
-            display: flex;
-            gap: 6px;
-            width: 100%;
-            height: 32px;
-            border-radius: 4px;
-            margin-bottom: 20px;
-            background-color: #1a1a1a;
-            padding: 4px;
-            box-sizing: border-box;
-        }
-        .palette-swatch {
-            flex-grow: 1;
-            height: 100%;
-            border-radius: 2px;
-            background-color: #333333;
-            transition: background-color 0.15s ease;
-        }
-        /* Container für die dauerhaften Farbkarten aller Elemente */
-        #paletteCardsContainer {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-        .palette-card {
-            background-color: #1a1a1a;
-            border: 1px solid #333333;
-            border-radius: 4px;
-            padding: 10px 12px;
-            text-align: left;
-            font-family: monospace;
+        .preview-caption {
             font-size: 12px;
-            color: #aaaaaa;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .card-swatch {
-            width: 28px;
-            height: 28px;
-            border-radius: 3px;
-            border: 1px solid #444444;
-            flex-shrink: 0;
-        }
-        .card-info {
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 3px;
-        }
-        .card-title {
-            color: #ffffff;
-            font-weight: bold;
-            font-size: 13px;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        }
-        .card-details {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
             color: #888888;
-        }
-        .card-hex {
-            color: #ffffff;
-            font-weight: bold;
+            min-height: 16px;
+            margin-bottom: 16px;
+            word-break: break-word;
         }
         .result-box {
             font-family: monospace;
@@ -192,28 +171,17 @@
             text-align: left;
             margin-bottom: 10px;
         }
-        .hex-value, .ral-value {
+        .result-box > div > div + div {
+            margin-top: 6px;
+        }
+        .value {
             color: #ffffff;
             font-weight: bold;
         }
-        .ral-content {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
-            width: 100%;
-        }
-        .ral-swatch {
-            width: 14px;
-            height: 14px;
-            border-radius: 2px;
-            border: 1px solid #444444;
-            background-color: #333333;
-            flex-shrink: 0;
-        }
-        .ral-hex {
+        .sub-value {
             color: #888888;
             font-size: 12px;
+            font-weight: normal;
         }
         .copy-btn {
             background: none;
@@ -230,39 +198,124 @@
             border-color: #666666;
             color: #ffffff;
         }
-        .lab-content > div + div {
-            margin-top: 6px;
-        }
-        .rgb-text {
-            color: #888888;
+        .section-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 22px 0 6px;
             font-size: 12px;
-            margin-left: 6px;
+            color: #cccccc;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
         }
-        .prompt-box {
-            flex-direction: column;
-            align-items: stretch;
-            gap: 8px;
+        select {
+            background-color: #1a1a1a;
+            color: #cccccc;
+            border: 1px solid #444444;
+            border-radius: 4px;
+            padding: 4px 6px;
+            font-size: 12px;
+        }
+        .hint {
+            font-size: 11px;
+            color: #888888;
+            text-align: left;
+            margin-bottom: 10px;
+        }
+        .prompt-card {
+            display: block;
         }
         .prompt-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            margin-bottom: 8px;
+        }
+        .prompt-title {
+            color: #ffffff;
+            font-weight: bold;
         }
         .prompt-text {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             font-size: 11px;
             color: #888888;
-            line-height: 1.4;
+            line-height: 1.45;
+            white-space: pre-wrap;
             word-break: break-word;
-            max-height: 110px;
+            max-height: 150px;
             overflow-y: auto;
             text-align: left;
-            padding-right: 4px;
+            background-color: #141414;
+            padding: 8px;
+            border-radius: 3px;
+            border: 1px solid #2a2a2a;
+        }
+        .field-label {
+            display: block;
+            text-align: left;
+            font-size: 11px;
+            color: #888888;
+            margin: 0 0 6px;
+        }
+        .field-label.spaced {
+            margin-top: 16px;
         }
         .note {
             margin-top: 15px;
             font-size: 11px;
             color: #888888;
             min-height: 14px;
+        }
+        .print-btn {
+            background-color: #2a2a2a;
+            border: 1px solid #555555;
+            color: #ffffff;
+            padding: 10px 16px;
+            font-size: 13px;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 20px;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .print-btn:hover {
+            background-color: #333333;
+            border-color: #777777;
+        }
+
+        /* Druckansicht / PDF Export Styles */
+        @media print {
+            body {
+                background-color: #ffffff;
+                color: #000000;
+                display: block;
+                padding: 10px;
+            }
+            .container {
+                background-color: #ffffff;
+                box-shadow: none;
+                max-width: 100%;
+                padding: 0;
+            }
+            input, button, select, .remove-btn, .add-btn, .print-btn {
+                display: none !important;
+            }
+            .result-box, .prompt-text {
+                background-color: #f9f9f9 !important;
+                color: #333333 !important;
+                border: 1px solid #cccccc !important;
+            }
+            h1, .subtitle, .section-head, .prompt-title, .value {
+                color: #000000 !important;
+            }
+            .sub-value, .hint, .note, .field-label {
+                color: #555555 !important;
+            }
+            .prompt-text {
+                max-height: none !important;
+            }
         }
     </style>
 </head>
@@ -272,133 +325,64 @@
     <h1>Namensfarbe</h1>
     <div class="subtitle">digitaler spiegel von MOENCH 76 // stimmen.me</div>
 
-    <!-- Dynamischer Container für Eingabefelder -->
-    <div id="inputsContainer">
-        <div class="input-group">
-            <input type="text" class="name-input" placeholder="Begriff oder Name (z.B. Vorname)..." autocomplete="off">
-            <button class="remove-btn" type="button" style="visibility: hidden;">×</button>
-        </div>
+    <label class="field-label" for="primaryInput">Primärer Name (bestimmt die Hauptfarbe)</label>
+    <div class="input-group">
+        <input type="text" class="name-input" id="primaryInput" placeholder="z. B. vollständiger Name oder Marke" autocomplete="off" aria-label="Primärer Name">
     </div>
+
+    <div class="field-label spaced">Weitere Elemente (optional): Rufname, Marke, Straße, Nachname, was auch immer</div>
+    <div id="inputsContainer"></div>
 
     <div class="controls-row">
         <button class="add-btn" id="addInputBtn" type="button">+ Element hinzufügen</button>
-        <span style="font-size: 11px; color: #888888;" id="activeCount">1 Element</span>
+        <span class="count" id="activeCount">1 Element</span>
     </div>
 
-    <!-- Visuelles Haupt-Vorschauquadrat -->
-    <div class="color-preview" id="colorPreview" title="Primärfarbe Vorschau"></div>
+    <div class="palette-strip" id="paletteStrip" role="group" aria-label="Farbpalette"></div>
 
-    <!-- Paletten-Streifen (Gesamtübersicht) -->
-    <div class="palette-preview" id="palettePreview">
-        <div class="palette-swatch"></div>
-    </div>
-
-    <!-- Dauerhafte Farbkarten-Liste für alle eingegebenen Elemente -->
-    <div id="paletteCardsContainer"></div>
+    <div class="color-preview" id="colorPreview"></div>
+    <div class="preview-caption" id="previewCaption"></div>
 
     <div class="result-box">
-        <span>Primär-Farbwert: <span class="hex-value" id="hexOutput" aria-live="polite">#333333</span> <span class="rgb-text" id="rgbOutput"></span></span>
+        <span>Matrikel-Farbwert (Bildschirm): <span class="value" id="hexOutput" aria-live="polite">–</span> <span class="sub-value" id="rgbOutput"></span></span>
         <button class="copy-btn" id="copyBtn" type="button">Kopieren</button>
     </div>
 
     <div class="result-box">
-        <div class="ral-content">
-            <span>RAL-Entsprechung:</span>
-            <span class="ral-swatch" id="ralSwatch"></span>
-            <span class="ral-value" id="ralOutput" aria-live="polite">–</span>
-            <span class="ral-hex" id="ralHex"></span>
+        <div>
+            <div>Lab (D50), Vorgabe für Material: <span class="value" id="labD50">–</span></div>
+            <div>Lab (D65), Vergleichswert: <span class="value" id="labD65">–</span></div>
         </div>
     </div>
 
     <div class="result-box">
-        <div class="lab-content">
-            <div>Lab (D50): <span class="hex-value" id="labD50">–</span></div>
-            <div>Lab (D65): <span class="hex-value" id="labD65">–</span></div>
+        <div>
+            <div>Kontrast zu Weiß: <span class="value" id="contrastWhite">–</span></div>
+            <div>Kontrast zu Schwarz: <span class="value" id="contrastBlack">–</span></div>
+            <div>Hellbezugswert (berechnet): <span class="value" id="hbwOutput">–</span></div>
         </div>
     </div>
 
-    <div class="result-box">
-        <div class="lab-content">
-            <div>Kontrast zu Weiß: <span class="hex-value" id="contrastWhite">–</span></div>
-            <div>Kontrast zu Schwarz: <span class="hex-value" id="contrastBlack">–</span></div>
-            <div>Hellbezugswert (HBW): <span class="hex-value" id="hbwOutput">–</span></div>
-        </div>
+    <div class="section-head">
+        <span>KI-Bildprompts & Außenauftritt</span>
+        <select id="langSelect" aria-label="Sprache der Prompts">
+            <option value="de">Deutsch</option>
+            <option value="en">English</option>
+        </select>
     </div>
+    <div class="hint">Aussagekräftige, detaillierte Prompts für fotorealistische Visualisierungen basierend auf der aktuellen Farbpalette.</div>
 
-    <div class="result-box prompt-box">
-        <div class="prompt-header">
-            <span>KI-Konzept-Prompt (Web, Raum, Stil):</span>
-            <button class="copy-btn" id="copyPromptBtn" type="button">Prompt Kopieren</button>
-        </div>
-        <div class="prompt-text" id="promptOutput">–</div>
-    </div>
+    <div id="promptList"></div>
+    <button class="add-btn full" id="copyAllBtn" type="button">Alle drei Bild-Prompts kopieren</button>
+
+    <button class="print-btn" id="printBtn" type="button">Farbkonzept als PDF / drucken</button>
 
     <div class="note" id="note" role="status"></div>
 </div>
 
 <script>
     const DEFAULT_HEX = '#333333';
-
-    // RAL Classic Datenbank
-    const RAL_DATA = [
-        "1000|Grünbeige|BEBD7F","1001|Beige|C2B078","1002|Sandgelb|C6A664","1003|Signalgelb|E5BE01",
-        "1004|Goldgelb|CDA434","1005|Honiggelb|A98307","1006|Maisgelb|E4A010","1007|Narzissengelb|DC9D00",
-        "1011|Braunbeige|8A6642","1012|Zitronengelb|C7B446","1013|Perlweiß|EAE6CA","1014|Elfenbein|E1CC4F",
-        "1015|Hellelfenbein|E6D690","1016|Schwefelgelb|EDFF21","1017|Safrangelb|F5D033","1018|Zinkgelb|F8F32B",
-        "1019|Graubeige|9E9764","1020|Olivgelb|999950","1021|Rapsgelb|F3DA0B","1023|Verkehrsgelb|FAD201",
-        "1024|Ockergelb|AEA04B","1026|Leuchtgelb|FFFF00","1027|Currygelb|9D9101","1028|Melonengelb|F4A900",
-        "1032|Ginstergelb|D6AE01","1033|Dahliengelb|F3A505","1034|Pastellgelb|EFA94A","1035|Perlbeige|6A5D4D",
-        "1036|Perlgold|705335","1037|Sonnengelb|F39F18",
-        "2000|Gelborange|ED760E","2001|Rotorange|C93C20","2002|Blutorange|CB2821","2003|Pastellorange|FF7514",
-        "2004|Reinorange|F44611","2005|Leuchtorange|FF2301","2007|Leuchthellorange|FFA420","2008|Hellrotorange|F75E25",
-        "2009|Verkehrsorange|F54021","2010|Signalorange|D84B20","2011|Tieforange|EC7C26","2012|Lachsorange|E55137",
-        "2013|Perlorange|C35831",
-        "3000|Feuerrot|AF2B1E","3001|Signalrot|A52019","3002|Karminrot|A2231D","3003|Rubinrot|9B111E",
-        "3004|Purpurrot|75151E","3005|Weinrot|5E2129","3007|Schwarzrot|412227","3009|Oxidrot|642424",
-        "3011|Braunrot|781F19","3012|Beigerot|C1876B","3013|Tomatenrot|A12312","3014|Altrosa|D36E70",
-        "3015|Hellrosa|EA899A","3016|Korallenrot|B32821","3017|Rosé|E63244","3018|Erdbeerrot|D53032",
-        "3020|Verkehrsrot|CC0605","3022|Lachsrot|D95030","3024|Leuchtrot|F80000","3026|Leuchthellrot|FE0000",
-        "3027|Himbeerrot|C51D34","3028|Reinrot|CB3234","3031|Orientrot|B32428","3032|Perlrubinrot|721422",
-        "3033|Perlrosa|B44C43",
-        "4001|Rotlila|6D3F5B","4002|Rotviolett|922B3E","4003|Erikaviolett|DE4C8A","4004|Bordeauxviolett|641C34",
-        "4005|Blaulila|6C4675","4006|Verkehrspurpur|A03472","4007|Purpurviolett|4A192C","4008|Signalviolett|924E7D",
-        "4009|Pastellviolett|A18594","4010|Telemagenta|CF3476","4011|Perlviolett|8673A1","4012|Perlbrombeer|6C6874",
-        "5000|Violettblau|354D73","5001|Grünblau|1F3438","5002|Ultramarinblau|20214F","5003|Saphirblau|1D1E33",
-        "5004|Schwarzblau|18171C","5005|Signalblau|1E2460","5007|Brillantblau|3E5F8A","5008|Graublau|26252D",
-        "5009|Azurblau|025669","5010|Enzianblau|0E294B","5011|Stahlblau|231A24","5012|Lichtblau|3B83BD",
-        "5013|Kobaltblau|1E213D","5014|Taubenblau|606E8C","5015|Himmelblau|2271B3","5017|Verkehrsblau|063971",
-        "5018|Türkisblau|3F888F","5019|Kapriblau|1B5583","5020|Ozeanblau|1D334A","5021|Wasserblau|256D7B",
-        "5022|Nachtblau|252850","5023|Fernblau|49678D","5024|Pastellblau|5D9B9B","5025|Perlenzianblau|2A6478",
-        "5026|Perlnachtblau|102C54",
-        "6000|Patinagrün|316650","6001|Smaragdgrün|287233","6002|Laubgrün|2D572C","6003|Olivgrün|424632",
-        "6004|Blaugrün|1F3A3D","6005|Moosgrün|2F4538","6006|Grauoliv|3E3B32","6007|Flaschengrün|343B29",
-        "6008|Braungrün|39352A","6009|Tannengrün|31372B","6010|Grasgrün|35682D","6011|Resedagrün|587246",
-        "6012|Schwarzgrün|343E40","6013|Schilfgrün|6C7156","6014|Gelboliv|47402E","6015|Schwarzoliv|3B3C36",
-        "6016|Türkisgrün|1E5945","6017|Maigrün|4C9141","6018|Gelbgrün|57A639","6019|Weißgrün|BDECB6",
-        "6020|Chromoxidgrün|2E3A23","6021|Blassgrün|89AC76","6022|Braunoliv|25221B","6024|Verkehrsgrün|308446",
-        "6025|Farngrün|3D642D","6026|Opalgrün|015D52","6027|Lichtgrün|84C3BE","6028|Kieferngrün|2C5545",
-        "6029|Minzgrün|20603D","6032|Signalgrün|317F43","6033|Minttürkis|497E76","6034|Pastelltürkis|7FB5B5",
-        "6035|Perlgrün|1C542D","6036|Perlopalgrün|193737","6037|Reingrün|008F39","6038|Leuchtgrün|00BB2D",
-        "7000|Fehgrau|78858B","7001|Silbergrau|8A9597","7002|Olivgrau|7E7B52","7003|Moosgrau|6C7059",
-        "7004|Signalgrau|969992","7005|Mausgrau|646B63","7006|Beigegrau|6D6552","7008|Khakigrau|6A5F31",
-        "7009|Grüngrau|4D5645","7010|Zeltgrau|4C514A","7011|Eisengrau|434B4D","7012|Basaltgrau|4E5754",
-        "7013|Braungrau|464531","7015|Schiefergrau|434750","7016|Anthrazitgrau|293133","7021|Schwarzgrau|23282B",
-        "7022|Umbragrau|332F2C","7023|Betongrau|686C5E","7024|Graphitgrau|474A51","7026|Granitgrau|2F353B",
-        "7030|Steingrau|8B8C7A","7031|Blaugrau|474B4E","7032|Kieselgrau|B8B799","7033|Zementgrau|7D8471",
-        "7034|Gelbgrau|8F8B66","7035|Lichtgrau|D7D7D7","7036|Platingrau|7F7679","7037|Staubgrau|7D7F7D",
-        "7038|Achatgrau|B5B8B1","7039|Quarzgrau|6C6960","7040|Fenstergrau|9DA1AA","7042|Verkehrsgrau A|8D948D",
-        "7043|Verkehrsgrau B|4E5452","7044|Seidengrau|CAC4B0","7045|Telegrau 1|909090","7046|Telegrau 2|82898F",
-        "7047|Telegrau 4|D0D0D0","7048|Perlmausgrau|898176",
-        "8000|Grünbraun|826C34","8001|Ockerbraun|955F20","8002|Signalbraun|6C3B2A","8003|Lehmbraun|734222",
-        "8004|Kupferbraun|8E402A","8007|Rehbraun|59351F","8008|Olivbraun|6F4F28","8011|Nussbraun|5B3A29",
-        "8012|Rotbraun|592321","8014|Sepiabraun|382C1E","8015|Kastanienbraun|633A34","8016|Mahagonibraun|4C2F27",
-        "8017|Schokoladenbraun|45322E","8019|Graubraun|403A3A","8022|Schwarzbraun|212121","8023|Orangebraun|A65E2F",
-        "8024|Beigebraun|79553C","8025|Blassbraun|755C48","8028|Terrabraun|4E3B31","8029|Perlkupfer|763C28",
-        "9001|Cremeweiß|FDF4E3","9002|Grauweiß|E7EBDA","9003|Signalweiß|F4F4F4","9004|Signalschwarz|282828",
-        "9005|Tiefschwarz|0A0A0A","9006|Weißaluminium|A5A5A5","9007|Graualuminium|8F8F8F","9010|Reinweiß|FFFFFF",
-        "9011|Graphitschwarz|1C1C1C","9016|Verkehrsweiß|F1F0EA","9017|Verkehrsschwarz|1E1E1E","9018|Papyrusweiß|CFD3CD",
-        "9022|Perlhellgrau|9C9C9C","9023|Perldunkelgrau|828282"
-    ];
+    const MAX_ELEMENTS = 8;
 
     const LAB_SETUP = {
         D65: {
@@ -425,12 +409,30 @@
         return [116 * y - 16, 500 * (x - y), 200 * (y - z)];
     }
 
+    function formatLab(lab) {
+        const v = lab.map(x => (Math.round(x * 10) / 10 + 0).toFixed(1));
+        return 'L ' + v[0] + ' · a ' + v[1] + ' · b ' + v[2];
+    }
+
+    function hexToRgb(hex) {
+        const h = hex.replace('#', '');
+        return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
+    }
+
     function relativeLuminance(rgb) {
         const [R, G, B] = rgb.map(c => {
             c /= 255;
             return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
         });
         return 0.2126 * R + 0.7152 * G + 0.0722 * B;
+    }
+
+    function contrastWithWhite(rgb) {
+        return 1.05 / (relativeLuminance(rgb) + 0.05);
+    }
+
+    function contrastWithBlack(rgb) {
+        return (relativeLuminance(rgb) + 0.05) / 0.05;
     }
 
     function contrastText(ratio) {
@@ -442,38 +444,6 @@
         return ratio.toFixed(1) + ' : 1 (' + tag + ')';
     }
 
-    function formatLab(lab) {
-        const v = lab.map(x => (Math.round(x * 10) / 10 + 0).toFixed(1));
-        return 'L ' + v[0] + ' · a ' + v[1] + ' · b ' + v[2];
-    }
-
-    function hexToRgb(hex) {
-        const h = hex.replace('#', '');
-        return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
-    }
-
-    const RAL = RAL_DATA.map(entry => {
-        const [code, name, hex] = entry.split('|');
-        return { code, name, hex: '#' + hex, lab: rgbToLab(...hexToRgb(hex)) };
-    });
-
-    function nearestRal(hex) {
-        const lab = rgbToLab(...hexToRgb(hex));
-        let best = null;
-        let bestDist = Infinity;
-        for (const ral of RAL) {
-            const dL = lab[0] - ral.lab[0];
-            const dA = lab[1] - ral.lab[1];
-            const dB = lab[2] - ral.lab[2];
-            const dist = dL * dL + dA * dA + dB * dB;
-            if (dist < bestDist) {
-                bestDist = dist;
-                best = ral;
-            }
-        }
-        return best;
-    }
-
     async function textToHexColor(text) {
         if (!text || text.trim() === '') return DEFAULT_HEX;
         const cleanText = text.trim().normalize('NFC');
@@ -481,204 +451,515 @@
         const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
         const hashArray = Array.from(new Uint8Array(hashBuffer));
         const [r, g, b] = hashArray;
-        return "#" + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('').toUpperCase();
+        return '#' + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('').toUpperCase();
     }
 
-    function generateSystemicPrompt(results) {
-        const validResults = results.filter(r => r.text !== '');
-        if (validResults.length === 0) return '–';
+    function rgbToHsl(rgb) {
+        const r = rgb[0] / 255, g = rgb[1] / 255, b = rgb[2] / 255;
+        const max = Math.max(r, g, b), min = Math.min(r, g, b);
+        const l = (max + min) / 2;
+        const d = max - min;
+        let h = 0, s = 0;
+        if (d !== 0) {
+            s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+            if (max === r) h = (g - b) / d + (g < b ? 6 : 0);
+            else if (max === g) h = (b - r) / d + 2;
+            else h = (r - g) / d + 4;
+            h *= 60;
+        }
+        return [h, s, l];
+    }
 
-        const primary = validResults[0];
-        const others = validResults.slice(1);
+    const COLOR_WORDS = {
+        de: {
+            red: 'Rot', orange: 'Orange', yellow: 'Gelb', green: 'Grün', turquoise: 'Türkis', blue: 'Blau',
+            violet: 'Violett', magenta: 'Magenta', pink: 'Rosa', brown: 'Braun', black: 'Schwarz', white: 'Weiß',
+            grey: 'Grau', beige: 'Beige', taupe: 'Taupe',
+            vdark: 'sehr dunkles', dark: 'dunkles', light: 'helles', vlight: 'sehr helles',
+            muted: 'gedämpftes', vivid: 'kräftiges'
+        },
+        en: {
+            red: 'red', orange: 'orange', yellow: 'yellow', green: 'green', turquoise: 'turquoise', blue: 'blue',
+            violet: 'violet', magenta: 'magenta', pink: 'pink', brown: 'brown', black: 'black', white: 'white',
+            grey: 'grey', beige: 'beige', taupe: 'taupe',
+            vdark: 'very dark', dark: 'dark', light: 'light', vlight: 'very light',
+            muted: 'muted', vivid: 'vivid'
+        }
+    };
 
-        let desc = `A professional corporate and editorial design concept based on a custom mathematical identity palette. ` +
-                   `The primary dominant base tone is inspired by '${primary.text}' (Hex ${primary.hex}, similar to ${primary.ral.name}), dominating large background surfaces and textiles. `;
-        
-        if (others.length > 0) {
-            const secondaryList = others.map((o, idx) => `Accent ${idx + 1} for '${o.text}' (Hex ${o.hex}, similar to ${o.ral.name})`).join(', ');
-            desc += `Secondary structural elements and highlights use: ${secondaryList}. `;
+    function describeColor(rgb, lang) {
+        const W = COLOR_WORDS[lang];
+        const [h, s, l] = rgbToHsl(rgb);
+        const lightMod = () => {
+            if (l < 0.18) return W.vdark;
+            if (l < 0.32) return W.dark;
+            if (l > 0.85) return W.vlight;
+            if (l > 0.68) return W.light;
+            return '';
+        };
+        const join = (mod, noun) => (mod ? mod + ' ' : '') + noun;
+
+        if (s < 0.10) {
+            if (l < 0.12) return W.black;
+            if (l > 0.93) return W.white;
+            return join(lightMod(), W.grey);
+        }
+        if (h >= 15 && h < 60 && s < 0.35) {
+            if (l >= 0.72) return W.beige;
+            if (l >= 0.40) return W.taupe;
+            return join(W.dark, W.brown);
+        }
+        if (h >= 10 && h < 50 && l < 0.45) {
+            return join(l < 0.25 ? W.dark : '', W.brown);
         }
 
-        desc += `The visual output must show a clean grid containing 3 distinct scenes: ` +
-                `1. A minimalist web interface layout on a laptop screen with calm typography and structured color accents. ` +
-                `2. An architectural interior design view of an executive workspace featuring calm neutral walls, structured textiles, and targeted color accents. ` +
-                `3. A person wearing a timeless, elegant professional outfit aligned with the palette. ` +
-                `Style: Editorial architecture photography, natural daylight, matte textures, high-end corporate identity presentation, clean composition.`;
-        return desc;
+        let noun;
+        if (h < 12 || h >= 345) noun = W.red;
+        else if (h < 40) noun = W.orange;
+        else if (h < 68) noun = W.yellow;
+        else if (h < 160) noun = W.green;
+        else if (h < 195) noun = W.turquoise;
+        else if (h < 255) noun = W.blue;
+        else if (h < 290) noun = W.violet;
+        else noun = W.magenta;
+
+        if ((noun === W.red || noun === W.magenta) && l >= 0.72) return W.pink;
+
+        let mod = lightMod();
+        if (!mod && s < 0.30) mod = W.muted;
+        if (!mod && s > 0.75) mod = W.vivid;
+        return join(mod, noun);
     }
+
+    function roleText(i, n, lang) {
+        const de = lang === 'de';
+        if (n === 1) return de ? 'alleinige Farbe, in mehreren Helligkeitsstufen einsetzen' : 'sole colour, use in several lightness levels';
+        if (n === 2) {
+            if (i === 0) return de ? 'Hauptfarbe (ca. 70 %)' : 'main colour (approx. 70%)';
+            return de ? 'Akzentfarbe (ca. 30 %)' : 'accent colour (approx. 30%)';
+        }
+        if (i === 0) return de ? 'Hauptfarbe (ca. 60 %)' : 'main colour (approx. 60%)';
+        if (i === 1) return de ? 'Zweitfarbe (ca. 30 %)' : 'secondary colour (approx. 30%)';
+        return de ? 'Akzentfarbe (zusammen ca. 10 %)' : 'accent colour (approx. 10% in total)';
+    }
+
+    function buildContext(entries, lang) {
+        const de = lang === 'de';
+        const n = entries.length;
+        const word = de ? 'Farbe' : 'Colour';
+        const ref = i => word + ' ' + (i + 1);
+        const c1 = ref(0);
+        const c2 = n >= 2 ? ref(1) : c1;
+        let acc;
+        if (n >= 4) acc = word + ' 3–' + n;
+        else if (n === 3) acc = ref(2);
+        else acc = c2;
+
+        const palette = entries.map((e, i) => {
+            const desc = describeColor(hexToRgb(e.hex), lang);
+            return '- ' + ref(i) + ': ' + desc + ' (' + e.hex + ') – ' + roleText(i, n, lang);
+        }).join('\n');
+
+        const mainOnWhiteOk = contrastWithWhite(hexToRgb(entries[0].hex)) >= 4.5;
+        let headingRule;
+        if (de) {
+            headingRule = mainOnWhiteOk
+                ? c1 + ' für Überschriften, Header und große Flächen; Fließtext in sehr dunklem Grau.'
+                : c1 + ' nur für Header, Hintergrundbereiche und große Flächen (nicht für Text); Überschriften und Fließtext in sehr dunklem Grau, damit der Kontrast stimmt.';
+        } else {
+            headingRule = mainOnWhiteOk
+                ? c1 + ' for headings, header and large areas; body text in very dark grey.'
+                : c1 + ' only for header, background areas and large surfaces (not for text); headings and body text in very dark grey to keep sufficient contrast.';
+        }
+        return { n, c1, c2, acc, palette, headingRule };
+    }
+
+    // VOLLSTÄNDIG ÜBERARBEITETE, HOCHWERTIGE UND AUSDRUCKSSSTARKE BILD-PROMPTS
+    const PROMPTS = {
+        de: {
+            room: x =>
+`Editorial interior design photography of a serene, minimalist consulting and reception room. 
+The space is characterized by architectural clarity, calm surfaces, and premium natural materials.
+
+BINDING COLOR PALETTE:
+${x.palette}
+
+MATERIAL AND SURFACE DISTRIBUTION:
+- Primary surface color (${x.c1}) is applied to expansive structural elements, such as a matte-painted architectural accent wall or bespoke built-in shelving units.
+- Secondary structural tone (${x.c2}) informs the sophisticated upholstered seating, linen drapery, and soft architectural textiles.
+- Accent tone (${x.acc}) appears strictly as highly curated, micro-level focal points: ceramic objects, art book spines, or delicate botanical vessels.
+- Supporting elements: Oiled natural oak flooring, raw plaster walls, black powder-coated steel details, and lush indoor greenery (such as Ficus lyrata).
+
+LIGHTING AND ATMOSPHERE:
+Soft, diffuse daylight entering from tall side windows, creating gentle shadows and an airy, contemplative atmosphere.
+
+VISUAL STYLE:
+Shot on 35mm lens, architectural digest style, pristine framing, perfectly balanced focal depth, hyper-realistic texture rendering. Absolutely NO text, NO watermarks, NO brand symbols, NO human figures.`,
+
+            web: x =>
+`Professional UI/UX product mock-up photography showing an ultra-clean, modern laptop and a smartphone neatly arranged on a solid, matte light-oak desktop. 
+The screens display a sophisticated, spacious corporate web interface adhering to strict grid alignment and generous whitespace.
+
+BINDING COLOR PALETTE:
+${x.palette}
+
+UI HIERARCHY & COLOR APPLICATION:
+- Generous white and light-grey background canvas.
+- Structural elements and primary headers utilize ${x.headingRule}
+- Content container cards and intermediate layout boxes are styled with ${x.c2}.
+- Interactive elements, primary call-to-action buttons, and precise UI highlights feature ${x.acc}.
+- On the screens, content is represented solely through abstract wireframe grid blocks, minimal UI line elements, and atmospheric thumbnail placeholders of natural landscapes—NO readable text or dummy paragraphs.
+
+LIGHTING AND ATMOSPHERE:
+Clean studio lighting with soft overhead diffusion, subtle ambient reflection on glass screens, crisp high-end commercial tech presentation.
+
+VISUAL STYLE:
+Commercial product photography, tack-sharp focus, editorial design layout, minimalist tech aesthetic. Absolutely NO readable text, NO real brand logos, NO watermarks.`,
+
+            cloth: x =>
+`High-end editorial fashion lookbook photography depicting an adult model wearing a timeless, impeccably tailored, and comfortable capsule outfit against a neutral, softly lit studio backdrop.
+
+BINDING COLOR PALETTE:
+${x.palette}
+
+GARMENT AND TEXTILE DISTRIBUTION:
+- Primary garment piece (such as a structured wool coat or tailored trousers) is executed in ${x.c1}.
+- Layered upper garment (such as a fine-knit cashmere sweater or structured overshirt) features ${x.c2}.
+- Micro-accessories (such as a fine silk scarf, leather key strap, or subtle footwear piping) incorporate ${x.acc}.
+- Natural, high-grade organic fabrics: heavy linen, raw wool, fine cotton, and matte leather with visible tactile grains.
+
+LIGHTING AND ATMOSPHERE:
+Soft, directional north-window studio lighting, gentle tonal gradation, elegant and grounded personal presentation.
+
+VISUAL STYLE:
+Minimalist fashion magazine editorial, full-length framing from the front, museum-grade textile rendering, sophisticated composure. Absolutely NO text, NO brand tags, NO logos, NO watermarks.`
+        },
+        en: {
+            room: x =>
+`Editorial interior design photography of a serene, minimalist consulting and reception room. 
+The space is characterized by architectural clarity, calm surfaces, and premium natural materials.
+
+BINDING COLOR PALETTE:
+${x.palette}
+
+MATERIAL AND SURFACE DISTRIBUTION:
+- Primary surface color (${x.c1}) is applied to expansive structural elements, such as a matte-painted architectural accent wall or bespoke built-in shelving units.
+- Secondary structural tone (${x.c2}) informs the sophisticated upholstered seating, linen drapery, and soft architectural textiles.
+- Accent tone (${x.acc}) appears strictly as highly curated, micro-level focal points: ceramic objects, art book spines, or delicate botanical vessels.
+- Supporting elements: Oiled natural oak flooring, raw plaster walls, black powder-coated steel details, and lush indoor greenery (such as Ficus lyrata).
+
+LIGHTING AND ATMOSPHERE:
+Soft, diffuse daylight entering from tall side windows, creating gentle shadows and an airy, contemplative atmosphere.
+
+VISUAL STYLE:
+Shot on 35mm lens, architectural digest style, pristine framing, perfectly balanced focal depth, hyper-realistic texture rendering. Absolutely NO text, NO watermarks, NO brand symbols, NO human figures.`,
+
+            web: x =>
+`Professional UI/UX product mock-up photography showing an ultra-clean, modern laptop and a smartphone neatly arranged on a solid, matte light-oak desktop. 
+The screens display a sophisticated, spacious corporate web interface adhering to strict grid alignment and generous whitespace.
+
+BINDING COLOR PALETTE:
+${x.palette}
+
+UI HIERARCHY & COLOR APPLICATION:
+- Generous white and light-grey background canvas.
+- Structural elements and primary headers utilize ${x.headingRule}
+- Content container cards and intermediate layout boxes are styled with ${x.c2}.
+- Interactive elements, primary call-to-action buttons, and precise UI highlights feature ${x.acc}.
+- On the screens, content is represented solely through abstract wireframe grid blocks, minimal UI line elements, and atmospheric thumbnail placeholders of natural landscapes—NO readable text or dummy paragraphs.
+
+LIGHTING AND ATMOSPHERE:
+Clean studio lighting with soft overhead diffusion, subtle ambient reflection on glass screens, crisp high-end commercial tech presentation.
+
+VISUAL STYLE:
+Commercial product photography, tack-sharp focus, editorial design layout, minimalist tech aesthetic. Absolutely NO readable text, NO real brand logos, NO watermarks.`,
+
+            cloth: x =>
+`High-end editorial fashion lookbook photography depicting an adult model wearing a timeless, impeccably tailored, and comfortable capsule outfit against a neutral, softly lit studio backdrop.
+
+BINDING COLOR PALETTE:
+${x.palette}
+
+GARMENT AND TEXTILE DISTRIBUTION:
+- Primary garment piece (such as a structured wool coat or tailored trousers) is executed in ${x.c1}.
+- Layered upper garment (such as a fine-knit cashmere sweater or structured overshirt) features ${x.c2}.
+- Micro-accessories (such as a fine silk scarf, leather key strap, or subtle footwear piping) incorporate ${x.acc}.
+- Natural, high-grade organic fabrics: heavy linen, raw wool, fine cotton, and matte leather with visible tactile grains.
+
+LIGHTING AND ATMOSPHERE:
+Soft, directional north-window studio lighting, gentle tonal gradation, elegant and grounded personal presentation.
+
+VISUAL STYLE:
+Minimalist fashion magazine editorial, full-length framing from the front, museum-grade textile rendering, sophisticated composure. Absolutely NO text, NO brand tags, NO logos, NO watermarks.`
+        }
+    };
+
+    const FARBKONZEPT_AUFTRAG = `SYSTEMISCHES FARBKONZEPT – ANALYSE, VISUALISIERUNG UND ANWENDUNG
+... (analytischer Kernauftrag) ...`;
+
+    function formatLabStar(lab) {
+        const v = lab.map(x => (Math.round(x * 10) / 10 + 0).toFixed(1));
+        return 'L* ' + v[0] + ' · a* ' + v[1] + ' · b* ' + v[2];
+    }
+
+    function buildBrief() {
+        if (entries.length === 0) return null;
+        const primaryFilled = primaryInput.value.trim() !== '';
+        const others = entries.filter(e => e.input !== primaryInput).length;
+        const lines = [
+            'FARBDATEN',
+            'Primäre Bezeichnung: ' + (primaryFilled ? entries[0].text : 'nicht angegeben'),
+            'Weitere Elemente: ' + others,
+            '',
+            'Herkunft der Farbwerte: SHA-256 (erste drei Bytes). HEX gilt für Bildschirm, CIELAB (D50) für Materialwahl.',
+            ''
+        ];
+        entries.forEach((e, i) => {
+            const rgb = hexToRgb(e.hex);
+            lines.push((i + 1) + '. Bezeichnung: ' + e.text);
+            lines.push('   HEX: ' + e.hex);
+            lines.push('   CIELAB (D50): ' + formatLabStar(rgbToLab(...rgb, 'D50')));
+        });
+        return lines.join('\n');
+    }
+
+    const PROMPT_KINDS = [
+        { key: 'room', title: { de: 'Raumgestaltung (Interior Design Prompt)', en: 'Interior Design Prompt' } },
+        { key: 'web', title: { de: 'Website (UI/UX Mockup Prompt)', en: 'UI/UX Mockup Prompt' } },
+        { key: 'cloth', title: { de: 'Kleidungsstil (Fashion Editorial Prompt)', en: 'Fashion Editorial Prompt' } }
+    ];
 
     const inputsContainer = document.getElementById('inputsContainer');
     const addInputBtn = document.getElementById('addInputBtn');
     const activeCount = document.getElementById('activeCount');
+    const paletteStrip = document.getElementById('paletteStrip');
     const colorPreview = document.getElementById('colorPreview');
-    const palettePreview = document.getElementById('palettePreview');
-    const paletteCardsContainer = document.getElementById('paletteCardsContainer');
+    const previewCaption = document.getElementById('previewCaption');
     const hexOutput = document.getElementById('hexOutput');
     const rgbOutput = document.getElementById('rgbOutput');
-    const ralOutput = document.getElementById('ralOutput');
-    const ralSwatch = document.getElementById('ralSwatch');
-    const ralHex = document.getElementById('ralHex');
     const labD50 = document.getElementById('labD50');
     const labD65 = document.getElementById('labD65');
     const contrastWhite = document.getElementById('contrastWhite');
     const contrastBlack = document.getElementById('contrastBlack');
     const hbwOutput = document.getElementById('hbwOutput');
-    const promptOutput = document.getElementById('promptOutput');
     const copyBtn = document.getElementById('copyBtn');
-    const copyPromptBtn = document.getElementById('copyPromptBtn');
+    const copyAllBtn = document.getElementById('copyAllBtn');
+    const printBtn = document.getElementById('printBtn');
+    const langSelect = document.getElementById('langSelect');
+    const promptList = document.getElementById('promptList');
     const note = document.getElementById('note');
+    const primaryInput = document.getElementById('primaryInput');
 
     const cryptoAvailable = !!(window.crypto && window.crypto.subtle);
     if (!cryptoAvailable) {
         note.textContent = 'Nicht verfügbar: Die Seite muss über HTTPS oder localhost geöffnet werden.';
+        primaryInput.disabled = true;
+        addInputBtn.disabled = true;
     }
 
-    function updateRemoveButtons() {
-        const groups = inputsContainer.querySelectorAll('.input-group');
-        groups.forEach(group => {
-            const btn = group.querySelector('.remove-btn');
-            btn.style.visibility = groups.length > 1 ? 'visible' : 'hidden';
+    let entries = [];
+    let selectedInput = null;
+    let runId = 0;
+    let copyText = '';
+
+    function updateControls() {
+        const total = inputsContainer.querySelectorAll('.input-group').length + 1;
+        activeCount.textContent = total + (total === 1 ? ' Element' : ' Elemente');
+        addInputBtn.disabled = !cryptoAvailable || total >= MAX_ELEMENTS;
+    }
+
+    function wireGroup(group) {
+        group.querySelector('.name-input').addEventListener('input', processPalette);
+        group.querySelector('.remove-btn').addEventListener('click', () => {
+            group.remove();
+            updateControls();
+            processPalette();
         });
-        activeCount.textContent = groups.length + (groups.length === 1 ? ' Element' : ' Elemente');
     }
 
-    let requestId = 0;
+    function addInputField() {
+        if (inputsContainer.querySelectorAll('.input-group').length + 1 >= MAX_ELEMENTS) return;
+        const group = document.createElement('div');
+        group.className = 'input-group';
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'name-input';
+        input.placeholder = 'Weiteres Element...';
+        input.autocomplete = 'off';
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'remove-btn';
+        removeBtn.textContent = '×';
+        group.appendChild(input);
+        group.appendChild(removeBtn);
+        inputsContainer.appendChild(group);
+        wireGroup(group);
+        updateControls();
+        input.focus();
+    }
+
+    async function copyToClipboard(btn, text) {
+        if (!btn.dataset.label) btn.dataset.label = btn.textContent;
+        let label;
+        try {
+            await navigator.clipboard.writeText(text);
+            label = 'Kopiert!';
+        } catch (err) {
+            label = 'Fehlgeschlagen';
+        }
+        btn.textContent = label;
+        setTimeout(() => { btn.textContent = btn.dataset.label; }, 1500);
+    }
 
     async function processPalette() {
-        const myId = ++requestId;
-        const inputs = inputsContainer.querySelectorAll('.name-input');
-        const results = [];
-
-        for (let input of inputs) {
-            const val = input.value;
-            const hex = await textToHexColor(val);
-            const ral = nearestRal(hex);
-            results.push({ text: val.trim(), hex, ral });
+        if (!cryptoAvailable) return;
+        const myId = ++runId;
+        const inputs = [primaryInput, ...inputsContainer.querySelectorAll('.name-input')];
+        const result = [];
+        for (const input of inputs) {
+            const text = input.value.trim();
+            if (text === '') continue;
+            result.push({ input, text, hex: await textToHexColor(text) });
         }
+        if (myId !== runId) return;
+        entries = result;
+        render();
+    }
 
-        if (myId !== requestId) return;
+    function currentEntry() {
+        return entries.find(e => e.input === selectedInput) || entries[0] || null;
+    }
 
-        // 1. Palette-Streifen unten aktualisieren
-        palettePreview.innerHTML = '';
-        results.forEach(res => {
-            const swatch = document.createElement('div');
+    function render() {
+        renderPalette();
+        renderDetail();
+        renderPrompts();
+    }
+
+    function renderPalette() {
+        paletteStrip.innerHTML = '';
+        if (entries.length === 0) {
+            const empty = document.createElement('div');
+            empty.className = 'palette-swatch placeholder';
+            paletteStrip.appendChild(empty);
+            return;
+        }
+        const active = currentEntry();
+        entries.forEach(entry => {
+            const swatch = document.createElement('button');
+            swatch.type = 'button';
             swatch.className = 'palette-swatch';
-            swatch.style.backgroundColor = res.hex;
-            swatch.title = res.text ? `${res.text}: ${res.hex}` : res.hex;
-            palettePreview.appendChild(swatch);
+            swatch.style.backgroundColor = entry.hex;
+            swatch.title = entry.text + ': ' + entry.hex;
+            swatch.setAttribute('aria-pressed', entry === active ? 'true' : 'false');
+            swatch.addEventListener('click', () => {
+                selectedInput = entry.input;
+                renderPalette();
+                renderDetail();
+            });
+            paletteStrip.appendChild(swatch);
         });
+    }
 
-        // 2. Dauerhafte Farbkarten-Liste für alle eingegebenen Elemente aufbauen
-        paletteCardsContainer.innerHTML = '';
-        results.forEach((res, index) => {
-            if (res.text !== '') {
-                const rgb = hexToRgb(res.hex);
-                const labD50Val = formatLab(rgbToLab(...rgb, 'D50'));
-                const card = document.createElement('div');
-                card.className = 'palette-card';
-                card.innerHTML = `
-                    <div class="card-swatch" style="background-color: ${res.hex};"></div>
-                    <div class="card-info">
-                        <div class="card-title">${index === 0 ? 'Primär: ' : 'Element: '}${res.text}</div>
-                        <div class="card-details">
-                            <span>Hex: <span class="card-hex">${res.hex}</span></span>
-                            <span>RAL: ${res.ral.code} ${res.ral.name}</span>
-                            <span>Lab(D50): ${labD50Val}</span>
-                        </div>
-                    </div>
-                `;
-                paletteCardsContainer.appendChild(card);
-            }
-        });
-
-        // 3. Primärwert (erstes Eingabefeld) für das Haupt-Vorschauquadrat und die Details
-        const primary = results[0];
-        colorPreview.style.backgroundColor = primary.hex;
-        hexOutput.textContent = primary.hex;
-
-        if (primary.text !== '') {
-            const rgb = hexToRgb(primary.hex);
-            rgbOutput.textContent = 'rgb(' + rgb.join(', ') + ')';
-            ralOutput.textContent = 'RAL ' + primary.ral.code + ' ' + primary.ral.name;
-            ralSwatch.style.backgroundColor = primary.ral.hex;
-            ralHex.textContent = primary.ral.hex;
-            labD50.textContent = formatLab(rgbToLab(...rgb, 'D50'));
-            labD65.textContent = formatLab(rgbToLab(...rgb, 'D65'));
-            
-            const lum = relativeLuminance(rgb);
-            const hbwVal = Math.round(lum * 100);
-            contrastWhite.textContent = contrastText(1.05 / (lum + 0.05));
-            contrastBlack.textContent = contrastText((lum + 0.05) / 0.05);
-            hbwOutput.textContent = hbwVal + ' von 100';
-
-            promptOutput.textContent = generateSystemicPrompt(results);
-        } else {
+    function renderDetail() {
+        const entry = currentEntry();
+        if (!entry) {
+            colorPreview.style.backgroundColor = DEFAULT_HEX;
+            previewCaption.textContent = '';
+            hexOutput.textContent = '–';
             rgbOutput.textContent = '';
-            ralOutput.textContent = '–';
-            ralSwatch.style.backgroundColor = '#333333';
-            ralHex.textContent = '';
             labD50.textContent = '–';
             labD65.textContent = '–';
             contrastWhite.textContent = '–';
             contrastBlack.textContent = '–';
             hbwOutput.textContent = '–';
-            promptOutput.textContent = '–';
+            copyText = '';
+            return;
         }
+        const rgb = hexToRgb(entry.hex);
+        const lab50 = formatLab(rgbToLab(...rgb, 'D50'));
+        const lab65 = formatLab(rgbToLab(...rgb, 'D65'));
+
+        colorPreview.style.backgroundColor = entry.hex;
+        previewCaption.textContent = entries.length > 1 ? 'Ansicht: ' + entry.text : '';
+        hexOutput.textContent = entry.hex;
+        rgbOutput.textContent = 'rgb(' + rgb.join(', ') + ')';
+        labD50.textContent = lab50;
+        labD65.textContent = lab65;
+        contrastWhite.textContent = contrastText(contrastWithWhite(rgb));
+        contrastBlack.textContent = contrastText(contrastWithBlack(rgb));
+        hbwOutput.textContent = Math.round(relativeLuminance(rgb) * 100) + ' von 100';
+        copyText = entry.hex + ' / rgb(' + rgb.join(', ') + ') / Lab(D50) ' + lab50;
     }
 
-    function addInputField(value = '') {
-        const group = document.createElement('div');
-        group.className = 'input-group';
-        group.innerHTML = `
-            <input type="text" class="name-input" placeholder="Weiterer Begriff (z.B. Nachname)..." value="${value}" autocomplete="off">
-            <button class="remove-btn" type="button">×</button>
-        `;
-        
-        const input = group.querySelector('input');
-        const removeBtn = group.querySelector('.remove-btn');
+    function currentPrompts() {
+        const lang = langSelect.value;
+        if (entries.length === 0) return null;
+        const ctx = buildContext(entries, lang);
+        return PROMPT_KINDS.map(kind => ({
+            title: kind.title[lang],
+            text: PROMPTS[lang][kind.key](ctx)
+        }));
+    }
 
-        input.addEventListener('input', processPalette);
-        removeBtn.addEventListener('click', () => {
-            group.remove();
-            updateRemoveButtons();
-            processPalette();
+    function makePromptCard(titleText, text, btnLabel) {
+        const box = document.createElement('div');
+        box.className = 'result-box prompt-card';
+        const header = document.createElement('div');
+        header.className = 'prompt-header';
+        const title = document.createElement('span');
+        title.className = 'prompt-title';
+        title.textContent = titleText;
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'copy-btn';
+        btn.textContent = btnLabel;
+        header.appendChild(title);
+        header.appendChild(btn);
+
+        const body = document.createElement('div');
+        body.className = 'prompt-text';
+        body.textContent = text || '–';
+
+        if (text) btn.addEventListener('click', () => copyToClipboard(btn, text));
+        else btn.disabled = true;
+
+        box.appendChild(header);
+        box.appendChild(body);
+        return box;
+    }
+
+    function renderPrompts() {
+        promptList.innerHTML = '';
+        const prompts = currentPrompts();
+        copyAllBtn.disabled = !prompts;
+        PROMPT_KINDS.forEach((kind, i) => {
+            promptList.appendChild(makePromptCard(
+                kind.title[langSelect.value], prompts ? prompts[i].text : null, 'Prompt kopieren'));
         });
-
-        inputsContainer.appendChild(group);
-        updateRemoveButtons();
-        input.focus();
     }
 
-    const initialInput = inputsContainer.querySelector('.name-input');
-    initialInput.addEventListener('input', processPalette);
-
-    addInputBtn.addEventListener('click', () => {
-        addInputField();
+    copyBtn.addEventListener('click', () => {
+        if (copyText) copyToClipboard(copyBtn, copyText);
     });
 
-    copyBtn.addEventListener('click', async () => {
-        const originalText = copyBtn.textContent;
-        const ralText = ralOutput.textContent !== '–' ? ' / ' + ralOutput.textContent + ' / Lab(D50) ' + labD50.textContent : '';
-        try {
-            await navigator.clipboard.writeText(hexOutput.textContent + ralText);
-            copyBtn.textContent = 'Kopiert!';
-        } catch (err) {
-            copyBtn.textContent = 'Fehlgeschlagen';
-        }
-        setTimeout(() => { copyBtn.textContent = originalText; }, 1500);
+    copyAllBtn.addEventListener('click', () => {
+        const prompts = currentPrompts();
+        if (!prompts) return;
+        const all = prompts.map((p, i) => '=== ' + p.title + ' ===\n' + p.text).join('\n\n');
+        copyToClipboard(copyAllBtn, all);
     });
 
-    copyPromptBtn.addEventListener('click', async () => {
-        const originalText = copyPromptBtn.textContent;
-        if (promptOutput.textContent === '–') return;
-        try {
-            await navigator.clipboard.writeText(promptOutput.textContent);
-            copyPromptBtn.textContent = 'Kopiert!';
-        } catch (err) {
-            copyPromptBtn.textContent = 'Fehlgeschlagen';
-        }
-        setTimeout(() => { copyPromptBtn.textContent = originalText; }, 1500);
+    printBtn.addEventListener('click', () => {
+        window.print();
     });
+
+    langSelect.addEventListener('change', renderPrompts);
+    addInputBtn.addEventListener('click', addInputField);
+    primaryInput.addEventListener('input', processPalette);
+
+    updateControls();
+    render();
 </script>
 
 </body>
